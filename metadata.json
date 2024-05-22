@@ -1,0 +1,8 @@
+{
+  "name": "GPU Supergfxctl Switch",
+  "description": "GPU Profile switcher Gnome-Shell-Extension for ASUS laptops using Supergfxctl",
+  "uuid": "gpu-switcher-supergfxctl@chikobara.github.io",
+  "shell-version": [
+    "46"
+  ]
+}
