@@ -2,7 +2,7 @@
 
 GPU Profile switcher Gnome-Shell-Extension for ASUS laptops using Supergfxctl
 
-## Use this only if you
+## Use this only if you:
 
 1. Have a laptop with Optimus Mux Switch and want to switch between iGPU and dGPU modes
 2. Want to use vfio
@@ -15,5 +15,14 @@ GPU Profile switcher Gnome-Shell-Extension for ASUS laptops using Supergfxctl
 
 ## Installation
 
+### Gnome Extensions Store
+
 - Install all the dependencies
-- 
+- Download the extension from the [Store]()
+
+### Manual
+
+- clone this repo
+    ```bash
+    cp -r GPU-Switcher-Supergfxctl ~/.local/share/gnome-extensions/gpu-switcher-supergfxctl@chikobara.github.io
+    ```
