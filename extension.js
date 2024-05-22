@@ -25,26 +25,24 @@ import {
 import * as Main from "resource:///org/gnome/shell/ui/main.js";
 import * as Util from "resource:///org/gnome/shell/misc/util.js";
 import * as PopupMenu from "resource:///org/gnome/shell/ui/popupMenu.js";
-import {
-  Extension,
-  gettext as _,
-} from "resource:///org/gnome/shell/extensions/extension.js";
+import { Extension } from "resource:///org/gnome/shell/extensions/extension.js";
 
+// Use gettext directly in the relevant class definitions
 const GPU_PROFILE_PARAMS = {
   integrated: {
-    name: _("Integrated"),
+    name: "Integrated",
     iconName: "computer-symbolic",
     command: "supergfxctl -m Integrated",
   },
   hybrid: {
-    name: _("Hybrid"),
+    name: "Hybrid",
     iconName: "processor-symbolic",
     command: "supergfxctl -m Hybrid",
   },
   /* dedicated: {
-    name: _("Dedicated"),
+    name: "Dedicated",
     iconName: "graphics-card-symbolic",
-    command: "supergfxctl -m Dedicated",
+    command: "supergfxctl -m dedicated",
   }, */
 };
 
@@ -53,7 +51,7 @@ const LAST_PROFILE_KEY = "last-selected-gpu-profile";
 const GpuProfilesToggle = GObject.registerClass(
   class GpuProfilesToggle extends QuickMenuToggle {
     _init() {
-      super._init({ title: _("GPU Mode") });
+      super._init({ title: "GPU Mode" });
 
       this._profileItems = new Map();
 
@@ -63,7 +61,7 @@ const GpuProfilesToggle = GObject.registerClass(
 
       this._profileSection = new PopupMenu.PopupMenuSection();
       this.menu.addMenuItem(this._profileSection);
-      this.menu.setHeader("graphics-card-symbolic", _("GPU Mode"));
+      this.menu.setHeader("graphics-card-symbolic", "GPU Mode");
       this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
       this._addProfileToggles();
@@ -90,7 +88,8 @@ const GpuProfilesToggle = GObject.registerClass(
     }
 
     _sync() {
-      const activeProfile = global.settings.get_string(LAST_PROFILE_KEY);
+      const activeProfile =
+        global.settings.get_string(LAST_PROFILE_KEY) || "Hybrid";
 
       for (const [profile, item] of this._profileItems) {
         item.setOrnament(
@@ -101,10 +100,10 @@ const GpuProfilesToggle = GObject.registerClass(
       }
 
       const params =
-        GPU_PROFILE_PARAMS[activeProfile] || GPU_PROFILE_PARAMS.Integrated;
+        GPU_PROFILE_PARAMS[activeProfile] || GPU_PROFILE_PARAMS.integrated;
       this.set({ subtitle: params.name, iconName: params.iconName });
 
-      this.checked = activeProfile !== "Integrated";
+      this.checked = activeProfile !== "Hybrid";
     }
   }
 );
