@@ -3,6 +3,14 @@
   "description": "GPU Profile switcher Gnome-Shell-Extension for ASUS laptops using Supergfxctl",
   "uuid": "gpu-switcher-supergfxctl@chikobara.github.io",
   "shell-version": [
+    "40",
+    "41",
+    "42",
+    "43",
+    "44",
+    "45",
     "46"
-  ]
+  ],
+  "url": "https://github.com/chikobara/GPU-Switcher-Supergfxctl",
+  "version": 0.1
 }
