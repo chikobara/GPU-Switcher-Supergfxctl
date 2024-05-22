@@ -15,85 +15,113 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
+
+import Gio from "gi://Gio";
 import GObject from "gi://GObject";
+import {
+  QuickMenuToggle,
+  SystemIndicator,
+} from "resource:///org/gnome/shell/ui/quickSettings.js";
 import * as Main from "resource:///org/gnome/shell/ui/main.js";
+import * as Util from "resource:///org/gnome/shell/misc/util.js";
+import * as PopupMenu from "resource:///org/gnome/shell/ui/popupMenu.js";
 import {
   Extension,
   gettext as _,
 } from "resource:///org/gnome/shell/extensions/extension.js";
-import {
-  QuickToggle,
-  SystemIndicator,
-} from "resource:///org/gnome/shell/ui/quickSettings.js";
-import * as Util from "resource:///org/gnome/shell/misc/util.js";
 
-const IntegratedToggle = GObject.registerClass(
-  class IntegratedToggle extends QuickToggle {
-    constructor() {
-      super({
-        title: _("Integrated"),
-        iconName: "computer-symbolic",
-        toggleMode: false,
-      });
+const GPU_PROFILE_PARAMS = {
+  integrated: {
+    name: _("Integrated"),
+    iconName: "computer-symbolic",
+    command: "supergfxctl -m Integrated",
+  },
+  hybrid: {
+    name: _("Hybrid"),
+    iconName: "processor-symbolic",
+    command: "supergfxctl -m Hybrid",
+  },
+  /* dedicated: {
+    name: _("Dedicated"),
+    iconName: "graphics-card-symbolic",
+    command: "supergfxctl -m Dedicated",
+  }, */
+};
+
+const LAST_PROFILE_KEY = "last-selected-gpu-profile";
+
+const GpuProfilesToggle = GObject.registerClass(
+  class GpuProfilesToggle extends QuickMenuToggle {
+    _init() {
+      super._init({ title: _("GPU Mode") });
+
+      this._profileItems = new Map();
+
       this.connect("clicked", () => {
-        Util.spawnCommandLine("supergfxctl -m Integrated");
+        this._sync();
       });
+
+      this._profileSection = new PopupMenu.PopupMenuSection();
+      this.menu.addMenuItem(this._profileSection);
+      this.menu.setHeader("graphics-card-symbolic", _("GPU Mode"));
+      this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+
+      this._addProfileToggles();
+    }
+
+    _addProfileToggles() {
+      for (const [profile, params] of Object.entries(GPU_PROFILE_PARAMS)) {
+        const item = new PopupMenu.PopupImageMenuItem(
+          params.name,
+          params.iconName
+        );
+        item.connect("activate", () => {
+          Util.spawnCommandLine(params.command);
+          this._setActiveProfile(profile);
+        });
+        this._profileItems.set(profile, item);
+        this._profileSection.addMenuItem(item);
+      }
+    }
+
+    _setActiveProfile(profile) {
+      global.settings.set_string(LAST_PROFILE_KEY, profile);
+      this._sync();
+    }
+
+    _sync() {
+      const activeProfile = global.settings.get_string(LAST_PROFILE_KEY);
+
+      for (const [profile, item] of this._profileItems) {
+        item.setOrnament(
+          profile === activeProfile
+            ? PopupMenu.Ornament.CHECK
+            : PopupMenu.Ornament.NONE
+        );
+      }
+
+      const params =
+        GPU_PROFILE_PARAMS[activeProfile] || GPU_PROFILE_PARAMS.Integrated;
+      this.set({ subtitle: params.name, iconName: params.iconName });
+
+      this.checked = activeProfile !== "Integrated";
     }
   }
 );
 
-const HybridToggle = GObject.registerClass(
-  class HybridToggle extends QuickToggle {
-    constructor() {
-      super({
-        title: _("Hybrid"),
-        iconName: "processor-symbolic",
-        toggleMode: false,
-      });
-      this.connect("clicked", () => {
-        Util.spawnCommandLine("supergfxctl -m Hybrid");
-      });
-    }
-  }
-);
-/* 
-const DedicatedToggle = GObject.registerClass(
-  class DedicatedToggle extends QuickToggle {
-    constructor() {
-      super({
-        title: _("Dedicated"),
-        iconName: "graphics-card-symbolic",
-        toggleMode: false,
-      });
-      this.connect("clicked", () => {
-        Util.spawnCommandLine("supergfxctl -m dedicated");
-      });
-    }
-  }
-); */
+export const Indicator = GObject.registerClass(
+  class Indicator extends SystemIndicator {
+    _init() {
+      super._init();
 
-const GfxctlIndicator = GObject.registerClass(
-  class GfxctlIndicator extends SystemIndicator {
-    constructor() {
-      super();
-
-      this._indicator = this._addIndicator();
-      this._indicator.iconName = "graphics-card-symbolic";
-
-      const integratedToggle = new IntegratedToggle();
-      const hybridToggle = new HybridToggle();
-      // const dedicatedToggle = new DedicatedToggle();
-
-      this.quickSettingsItems.push(integratedToggle);
-      this.quickSettingsItems.push(hybridToggle);
-      // this.quickSettingsItems.push(dedicatedToggle);
+      this.quickSettingsItems.push(new GpuProfilesToggle());
     }
   }
 );
 
-export default class GfxctlExtension extends Extension {
+export default class GpuSwitcherExtension extends Extension {
   enable() {
-    this._indicator = new GfxctlIndicator();
+    this._indicator = new Indicator();
     Main.panel.statusArea.quickSettings.addExternalIndicator(this._indicator);
   }
 
