@@ -1,21 +1,3 @@
-/* extension.js
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * SPDX-License-Identifier: GPL-2.0-or-later
- */
-
 import Gio from "gi://Gio";
 import GObject from "gi://GObject";
 import {
@@ -52,8 +34,7 @@ const GpuProfilesToggle = GObject.registerClass(
       super._init({ title: "GPU Mode" });
 
       this._profileItems = new Map();
-
-      this._activeProfile = "Hybrid"; // Default active profile
+      this._activeProfile = null; // Will be set after running supergfxctl -g
 
       this.connect("clicked", () => {
         this._sync();
@@ -65,6 +46,7 @@ const GpuProfilesToggle = GObject.registerClass(
       this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
       this._addProfileToggles();
+      this._fetchCurrentProfile();
     }
 
     _addProfileToggles() {
@@ -83,14 +65,54 @@ const GpuProfilesToggle = GObject.registerClass(
       }
     }
 
+    _fetchCurrentProfile() {
+      try {
+        let proc = Gio.Subprocess.new(
+          ["supergfxctl", "-g"],
+          Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_PIPE
+        );
+
+        proc.communicate_utf8_async(null, null, (proc, res) => {
+          try {
+            let [ok, stdout, stderr] = proc.communicate_utf8_finish(res);
+            if (ok && stdout.trim() in GPU_PROFILE_PARAMS) {
+              this._setActiveProfile(stdout.trim().toLowerCase());
+            } else {
+              log(`Failed to fetch current profile: ${stderr}`);
+              this._setActiveProfile("hybrid"); // Fallback to default
+            }
+          } catch (e) {
+            log(`Error while fetching current profile: ${e.message}`);
+            this._setActiveProfile("hybrid"); // Fallback to default
+          }
+        });
+      } catch (e) {
+        log(`Failed to execute supergfxctl: ${e.message}`);
+        this._setActiveProfile("hybrid"); // Fallback to default
+      }
+    }
+
     _setActiveProfile(profile) {
-      log(`Setting active profile: ${profile}`);
-      this._activeProfile = profile;
-      this._sync();
+      if (GPU_PROFILE_PARAMS[profile]) {
+        log(`Setting active profile: ${profile}`);
+        this._activeProfile = profile;
+        this._sync();
+      } else {
+        log(`Unknown profile: ${profile}`);
+      }
     }
 
     _sync() {
       log(`Synchronizing profile: ${this._activeProfile}`);
+
+      const params = GPU_PROFILE_PARAMS[this._activeProfile];
+
+      if (!params) {
+        log(
+          `Active profile ${this._activeProfile} is not defined in GPU_PROFILE_PARAMS.`
+        );
+        return;
+      }
 
       for (const [profile, item] of this._profileItems) {
         item.setOrnament(
@@ -100,11 +122,9 @@ const GpuProfilesToggle = GObject.registerClass(
         );
       }
 
-      const params =
-        GPU_PROFILE_PARAMS[this._activeProfile] || GPU_PROFILE_PARAMS.Hybrid;
       this.set({ subtitle: params.name, iconName: params.iconName });
 
-      this.checked = activeProfile !== "Hybrid";
+      this.checked = this._activeProfile !== "hybrid";
     }
   }
 );
@@ -113,7 +133,6 @@ export const Indicator = GObject.registerClass(
   class Indicator extends SystemIndicator {
     _init() {
       super._init();
-
       this.quickSettingsItems.push(new GpuProfilesToggle());
     }
   }
