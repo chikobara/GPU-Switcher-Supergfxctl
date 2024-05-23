@@ -2,7 +2,7 @@
 
 GPU Profile switcher Gnome-Shell-Extension for ASUS laptops using Supergfxctl
 
-![screenshot example](./src.png)
+![screenshot example](./img/scr.png)
 
 ## Use this only if you
 
