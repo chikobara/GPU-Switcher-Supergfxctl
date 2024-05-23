@@ -11,12 +11,12 @@ import { Extension } from "resource:///org/gnome/shell/extensions/extension.js";
 
 // Define GPU profiles with their names, icons, and commands
 const GPU_PROFILE_PARAMS = {
-  integrated: {
+  Integrated: {
     name: "Integrated",
     iconName: "computer-symbolic",
     command: "supergfxctl -m Integrated && gnome-session-quit --logout",
   },
-  hybrid: {
+  Hybrid: {
     name: "Hybrid",
     iconName: "processor-symbolic",
     command: "supergfxctl -m Hybrid && gnome-session-quit --logout",
@@ -49,22 +49,6 @@ const GpuProfilesToggle = GObject.registerClass(
       this._fetchCurrentProfile();
     }
 
-    _addProfileToggles() {
-      for (const [profile, params] of Object.entries(GPU_PROFILE_PARAMS)) {
-        const item = new PopupMenu.PopupImageMenuItem(
-          params.name,
-          params.iconName
-        );
-        item.connect("activate", () => {
-          log(`Activating profile: ${profile}`);
-          Util.spawnCommandLine(params.command);
-          this._setActiveProfile(profile);
-        });
-        this._profileItems.set(profile, item);
-        this._profileSection.addMenuItem(item);
-      }
-    }
-
     _fetchCurrentProfile() {
       try {
         let proc = Gio.Subprocess.new(
@@ -79,16 +63,32 @@ const GpuProfilesToggle = GObject.registerClass(
               this._setActiveProfile(stdout.trim().toLowerCase());
             } else {
               log(`Failed to fetch current profile: ${stderr}`);
-              this._setActiveProfile("hybrid"); // Fallback to default
+              this._setActiveProfile("Hybrid"); // Fallback to default
             }
           } catch (e) {
             log(`Error while fetching current profile: ${e.message}`);
-            this._setActiveProfile("hybrid"); // Fallback to default
+            this._setActiveProfile("Hybrid"); // Fallback to default
           }
         });
       } catch (e) {
         log(`Failed to execute supergfxctl: ${e.message}`);
-        this._setActiveProfile("hybrid"); // Fallback to default
+        this._setActiveProfile("Hybrid"); // Fallback to default
+      }
+    }
+
+    _addProfileToggles() {
+      for (const [profile, params] of Object.entries(GPU_PROFILE_PARAMS)) {
+        const item = new PopupMenu.PopupImageMenuItem(
+          params.name,
+          params.iconName
+        );
+        item.connect("activate", () => {
+          log(`Activating profile: ${profile}`);
+          Util.spawnCommandLine(params.command);
+          this._setActiveProfile(profile);
+        });
+        this._profileItems.set(profile, item);
+        this._profileSection.addMenuItem(item);
       }
     }
 
@@ -124,7 +124,7 @@ const GpuProfilesToggle = GObject.registerClass(
 
       this.set({ subtitle: params.name, iconName: params.iconName });
 
-      this.checked = this._activeProfile !== "hybrid";
+      this.checked = this._activeProfile !== "Hybrid";
     }
   }
 );
