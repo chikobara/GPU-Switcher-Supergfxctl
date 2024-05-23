@@ -21,10 +21,10 @@ const GPU_PROFILE_PARAMS = {
     iconName: "processor-symbolic",
     command: "supergfxctl -m Hybrid && gnome-session-quit --logout",
   },
-  /* dedicated: {
+  /* Dedicated: {
     name: "Dedicated",
     iconName: "graphics-card-symbolic",
-    command: "supergfxctl -m dedicated",
+    command: "supergfxctl -m Dedicated",
   }, */
 };
 
@@ -60,7 +60,7 @@ const GpuProfilesToggle = GObject.registerClass(
           try {
             let [ok, stdout, stderr] = proc.communicate_utf8_finish(res);
             if (ok && stdout.trim() in GPU_PROFILE_PARAMS) {
-              this._setActiveProfile(stdout.trim().toLowerCase());
+              this._setActiveProfile(stdout.trim());
             } else {
               log(`Failed to fetch current profile: ${stderr}`);
               this._setActiveProfile("Hybrid"); // Fallback to default
