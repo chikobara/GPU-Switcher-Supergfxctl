@@ -14,12 +14,12 @@ const GPU_PROFILE_PARAMS = {
   Integrated: {
     name: "Integrated",
     iconName: "computer-symbolic",
-    command: "supergfxctl -m Integrated && gnome-session-quit --logout",
+    command: "supergfxctl -m Integrated",
   },
   Hybrid: {
     name: "Hybrid",
     iconName: "processor-symbolic",
-    command: "supergfxctl -m Hybrid && gnome-session-quit --logout",
+    command: "supergfxctl -m Hybrid",
   },
   /* Dedicated: {
     name: "Dedicated",
@@ -84,12 +84,27 @@ const GpuProfilesToggle = GObject.registerClass(
         );
         item.connect("activate", () => {
           log(`Activating profile: ${profile}`);
-          Util.spawnCommandLine(params.command);
-          this._setActiveProfile(profile);
+          this._activateProfile(profile, params.command);
         });
         this._profileItems.set(profile, item);
         this._profileSection.addMenuItem(item);
       }
+    }
+
+    _activateProfile(profile, command) {
+      // Run the supergfxctl command to switch GPU mode
+      Util.spawnCommandLineAsync(command, (result) => {
+        if (result.success) {
+          // Log success and set the active profile
+          log(`Profile ${profile} activated successfully`);
+          this._setActiveProfile(profile);
+          // Logout only after the profile is successfully activated
+          Util.spawnCommandLine("gnome-session-quit --logout");
+        } else {
+          // Log failure if the command did not succeed
+          log(`Failed to activate profile ${profile}`);
+        }
+      });
     }
 
     _setActiveProfile(profile) {
