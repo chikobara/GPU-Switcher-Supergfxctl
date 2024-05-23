@@ -22,7 +22,7 @@ import {
   QuickMenuToggle,
   SystemIndicator,
 } from "resource:///org/gnome/shell/ui/quickSettings.js";
-import * as SystemActions from "../../misc/systemActions.js";
+import * as SystemActions from "resource:///org/gnome/shell/ui/systemActions.js";
 import * as Main from "resource:///org/gnome/shell/ui/main.js";
 import * as Util from "resource:///org/gnome/shell/misc/util.js";
 import * as PopupMenu from "resource:///org/gnome/shell/ui/popupMenu.js";
