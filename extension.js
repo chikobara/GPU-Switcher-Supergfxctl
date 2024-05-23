@@ -74,6 +74,7 @@ const GpuProfilesToggle = GObject.registerClass(
           params.iconName
         );
         item.connect("activate", () => {
+          log(`Activating profile: ${profile}`);
           Util.spawnCommandLine(params.command);
           this._setActiveProfile(profile);
         });
@@ -83,13 +84,15 @@ const GpuProfilesToggle = GObject.registerClass(
     }
 
     _setActiveProfile(profile) {
-      global.settings.set_string(LAST_PROFILE_KEY, profile);
+      log(`Setting active profile: ${profile}`);
+      this._settings.set_string(LAST_PROFILE_KEY, profile);
       this._sync();
     }
 
     _sync() {
       const activeProfile =
-        global.settings.get_string(LAST_PROFILE_KEY) || "Integrated";
+        this._settings.get_string(LAST_PROFILE_KEY) || "Integrated";
+      log(`Synchronizing profile: ${activeProfile}`);
 
       for (const [profile, item] of this._profileItems) {
         item.setOrnament(
@@ -120,6 +123,10 @@ export const Indicator = GObject.registerClass(
 
 export default class GpuSwitcherExtension extends Extension {
   enable() {
+    this._settings = new Gio.Settings({
+      schema: "org.gnome.shell.extensions.gpu-switcher",
+    });
+
     this._indicator = new Indicator();
     Main.panel.statusArea.quickSettings.addExternalIndicator(this._indicator);
   }

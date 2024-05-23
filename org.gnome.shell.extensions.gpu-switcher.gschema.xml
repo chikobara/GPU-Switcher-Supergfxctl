@@ -1,0 +1,10 @@
+<?xml version="0.1" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.gpu-switcher" path="/org/gnome/shell/extensions/gpu-switcher/">
+    <key name="last-selected-gpu-profile" type="s">
+      <default>'Integrated'</default>
+      <summary>Last selected GPU profile</summary>
+      <description>The last selected GPU profile (Integrated, Hybrid)</description>
+    </key>
+  </schema>
+</schemalist>
