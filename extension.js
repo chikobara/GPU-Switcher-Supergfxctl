@@ -46,14 +46,14 @@ const GPU_PROFILE_PARAMS = {
   }, */
 };
 
-const LAST_PROFILE_KEY = "last-selected-gpu-profile";
-
 const GpuProfilesToggle = GObject.registerClass(
   class GpuProfilesToggle extends QuickMenuToggle {
     _init() {
       super._init({ title: "GPU Mode" });
 
       this._profileItems = new Map();
+
+      this._activeProfile = "Hybrid"; // Default active profile
 
       this.connect("clicked", () => {
         this._sync();
@@ -85,28 +85,26 @@ const GpuProfilesToggle = GObject.registerClass(
 
     _setActiveProfile(profile) {
       log(`Setting active profile: ${profile}`);
-      this._settings.set_string(LAST_PROFILE_KEY, profile);
+      this._activeProfile = profile;
       this._sync();
     }
 
     _sync() {
-      const activeProfile =
-        this._settings.get_string(LAST_PROFILE_KEY) || "Integrated";
-      log(`Synchronizing profile: ${activeProfile}`);
+      log(`Synchronizing profile: ${this._activeProfile}`);
 
       for (const [profile, item] of this._profileItems) {
         item.setOrnament(
-          profile === activeProfile
+          profile === this._activeProfile
             ? PopupMenu.Ornament.CHECK
             : PopupMenu.Ornament.NONE
         );
       }
 
       const params =
-        GPU_PROFILE_PARAMS[activeProfile] || GPU_PROFILE_PARAMS.Integrated;
+        GPU_PROFILE_PARAMS[this._activeProfile] || GPU_PROFILE_PARAMS.Hybrid;
       this.set({ subtitle: params.name, iconName: params.iconName });
 
-      this.checked = activeProfile !== "Integrated";
+      this.checked = activeProfile !== "Hybrid";
     }
   }
 );
@@ -123,10 +121,6 @@ export const Indicator = GObject.registerClass(
 
 export default class GpuSwitcherExtension extends Extension {
   enable() {
-    this._settings = new Gio.Settings({
-      schema: "org.gnome.shell.extensions.gpu-switcher",
-    });
-
     this._indicator = new Indicator();
     Main.panel.statusArea.quickSettings.addExternalIndicator(this._indicator);
   }
