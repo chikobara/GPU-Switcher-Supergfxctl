@@ -92,19 +92,29 @@ const GpuProfilesToggle = GObject.registerClass(
     }
 
     _activateProfile(profile, command) {
-      // Run the supergfxctl command to switch GPU mode
-      Util.spawnCommandLineAsync(command, (result) => {
-        if (result.success) {
-          // Log success and set the active profile
-          log(`Profile ${profile} activated successfully`);
-          this._setActiveProfile(profile);
-          // Logout only after the profile is successfully activated
-          Util.spawnCommandLine("gnome-session-quit --logout");
-        } else {
-          // Log failure if the command did not succeed
-          log(`Failed to activate profile ${profile}`);
-        }
-      });
+      try {
+        let proc = Gio.Subprocess.new(
+          ["sh", "-c", command],
+          Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_PIPE
+        );
+
+        proc.communicate_utf8_async(null, null, (proc, res) => {
+          try {
+            let [ok, stdout, stderr] = proc.communicate_utf8_finish(res);
+            if (proc.get_successful()) {
+              log(`Profile ${profile} activated successfully`);
+              this._setActiveProfile(profile);
+              Util.spawnCommandLine("gnome-session-quit --logout");
+            } else {
+              log(`Failed to activate profile ${profile}: ${stderr.trim()}`);
+            }
+          } catch (e) {
+            log(`Error while activating profile ${profile}: ${e.message}`);
+          }
+        });
+      } catch (e) {
+        log(`Failed to execute command: ${e.message}`);
+      }
     }
 
     _setActiveProfile(profile) {
