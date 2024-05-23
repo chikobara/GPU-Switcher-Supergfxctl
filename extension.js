@@ -65,7 +65,6 @@ const GpuProfilesToggle = GObject.registerClass(
       this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
       this._addProfileToggles();
-      this._sync();
     }
 
     _addProfileToggles() {
