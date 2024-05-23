@@ -89,7 +89,7 @@ const GpuProfilesToggle = GObject.registerClass(
 
     _sync() {
       const activeProfile =
-        global.settings.get_string(LAST_PROFILE_KEY) || "Hybrid";
+        global.settings.get_string(LAST_PROFILE_KEY) || "Integrated";
 
       for (const [profile, item] of this._profileItems) {
         item.setOrnament(
@@ -100,10 +100,10 @@ const GpuProfilesToggle = GObject.registerClass(
       }
 
       const params =
-        GPU_PROFILE_PARAMS[activeProfile] || GPU_PROFILE_PARAMS.integrated;
+        GPU_PROFILE_PARAMS[activeProfile] || GPU_PROFILE_PARAMS.Integrated;
       this.set({ subtitle: params.name, iconName: params.iconName });
 
-      this.checked = activeProfile !== "Hybrid";
+      this.checked = activeProfile !== "Integrated";
     }
   }
 );
