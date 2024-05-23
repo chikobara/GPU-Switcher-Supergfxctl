@@ -22,7 +22,6 @@ import {
   QuickMenuToggle,
   SystemIndicator,
 } from "resource:///org/gnome/shell/ui/quickSettings.js";
-import * as SystemActions from "resource:///org/gnome/shell/ui/systemActions.js";
 import * as Main from "resource:///org/gnome/shell/ui/main.js";
 import * as Util from "resource:///org/gnome/shell/misc/util.js";
 import * as PopupMenu from "resource:///org/gnome/shell/ui/popupMenu.js";
@@ -33,12 +32,12 @@ const GPU_PROFILE_PARAMS = {
   integrated: {
     name: "Integrated",
     iconName: "computer-symbolic",
-    command: "supergfxctl -m Integrated",
+    command: "supergfxctl -m Integrated && gnome-session-quit --logout",
   },
   hybrid: {
     name: "Hybrid",
     iconName: "processor-symbolic",
-    command: "supergfxctl -m Hybrid",
+    command: "supergfxctl -m Hybrid && gnome-session-quit --logout",
   },
   /* dedicated: {
     name: "Dedicated",
@@ -64,7 +63,6 @@ const GpuProfilesToggle = GObject.registerClass(
       this.menu.addMenuItem(this._profileSection);
       this.menu.setHeader("graphics-card-symbolic", "GPU Mode");
       this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-      this._systemActions = new SystemActions.getDefault();
 
       this._addProfileToggles();
     }
@@ -78,9 +76,6 @@ const GpuProfilesToggle = GObject.registerClass(
         item.connect("activate", () => {
           Util.spawnCommandLine(params.command);
           this._setActiveProfile(profile);
-          this._addSystemAction(_("Log Out…"), "can-logout", () => {
-            this._systemActions.activateLogout();
-          });
         });
         this._profileItems.set(profile, item);
         this._profileSection.addMenuItem(item);
