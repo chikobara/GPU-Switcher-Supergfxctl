@@ -27,7 +27,7 @@ import * as Util from "resource:///org/gnome/shell/misc/util.js";
 import * as PopupMenu from "resource:///org/gnome/shell/ui/popupMenu.js";
 import { Extension } from "resource:///org/gnome/shell/extensions/extension.js";
 
-// Use gettext directly in the relevant class definitions
+// Define GPU profiles with their names, icons, and commands
 const GPU_PROFILE_PARAMS = {
   integrated: {
     name: "Integrated",
@@ -65,6 +65,7 @@ const GpuProfilesToggle = GObject.registerClass(
       this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
       this._addProfileToggles();
+      this._sync();
     }
 
     _addProfileToggles() {
