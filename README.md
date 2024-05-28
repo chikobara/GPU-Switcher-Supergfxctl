@@ -25,7 +25,9 @@ asusctl v6.0.9.r0.gfaca084-1
 ### Gnome Extensions Store
 
 - Install all the dependencies
-- Download the extension from the [<img alt="EGO page" height="70" src="https://raw.githubusercontent.com/andyholmes/gnome-shell-extensions-badge/master/get-it-on-ego.svg?sanitize=true">](https://extensions.gnome.org/extension/7018/gpu-supergfxctl-switch/)
+- Download the extension from the Store
+
+ [<img alt="EGO page" height="70" src="https://raw.githubusercontent.com/andyholmes/gnome-shell-extensions-badge/master/get-it-on-ego.svg?sanitize=true">](https://extensions.gnome.org/extension/7018/gpu-supergfxctl-switch/)
 
 
 ### Manual
