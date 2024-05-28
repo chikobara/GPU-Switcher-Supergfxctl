@@ -62,16 +62,16 @@ const GpuProfilesToggle = GObject.registerClass(
             if (ok && stdout.trim() in GPU_PROFILE_PARAMS) {
               this._setActiveProfile(stdout.trim());
             } else {
-              log(`Failed to fetch current profile: ${stderr}`);
+              console.error(`Failed to fetch current profile: ${stderr}`);
               this._setActiveProfile("Hybrid"); // Fallback to default
             }
           } catch (e) {
-            log(`Error while fetching current profile: ${e.message}`);
+            console.error(`Error while fetching current profile: ${e.message}`);
             this._setActiveProfile("Hybrid"); // Fallback to default
           }
         });
       } catch (e) {
-        log(`Failed to execute supergfxctl: ${e.message}`);
+        console.error(`Failed to execute supergfxctl: ${e.message}`);
         this._setActiveProfile("Hybrid"); // Fallback to default
       }
     }
@@ -83,7 +83,7 @@ const GpuProfilesToggle = GObject.registerClass(
           params.iconName
         );
         item.connect("activate", () => {
-          log(`Activating profile: ${profile}`);
+          console.log(`Activating profile: ${profile}`);
           this._activateProfile(profile, params.command);
         });
         this._profileItems.set(profile, item);
@@ -102,38 +102,42 @@ const GpuProfilesToggle = GObject.registerClass(
           try {
             let [ok, stdout, stderr] = proc.communicate_utf8_finish(res);
             if (proc.get_successful()) {
-              log(`Profile ${profile} activated successfully`);
+              console.log(`Profile ${profile} activated successfully`);
               this._setActiveProfile(profile);
               Util.spawnCommandLine("gnome-session-quit --logout");
             } else {
-              log(`Failed to activate profile ${profile}: ${stderr.trim()}`);
+              console.error(
+                `Failed to activate profile ${profile}: ${stderr.trim()}`
+              );
             }
           } catch (e) {
-            log(`Error while activating profile ${profile}: ${e.message}`);
+            console.error(
+              `Error while activating profile ${profile}: ${e.message}`
+            );
           }
         });
       } catch (e) {
-        log(`Failed to execute command: ${e.message}`);
+        console.error(`Failed to execute command: ${e.message}`);
       }
     }
 
     _setActiveProfile(profile) {
       if (GPU_PROFILE_PARAMS[profile]) {
-        log(`Setting active profile: ${profile}`);
+        console.log(`Setting active profile: ${profile}`);
         this._activeProfile = profile;
         this._sync();
       } else {
-        log(`Unknown profile: ${profile}`);
+        console.error(`Unknown profile: ${profile}`);
       }
     }
 
     _sync() {
-      log(`Synchronizing profile: ${this._activeProfile}`);
+      console.log(`Synchronizing profile: ${this._activeProfile}`);
 
       const params = GPU_PROFILE_PARAMS[this._activeProfile];
 
       if (!params) {
-        log(
+        console.error(
           `Active profile ${this._activeProfile} is not defined in GPU_PROFILE_PARAMS.`
         );
         return;
@@ -172,5 +176,6 @@ export default class GpuSwitcherExtension extends Extension {
   disable() {
     this._indicator.quickSettingsItems.forEach((item) => item.destroy());
     this._indicator.destroy();
+    this._indicator = null; // Null out the indicator
   }
 }
