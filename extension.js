@@ -18,14 +18,14 @@ const GPU_PROFILE_PARAMS = {
   },
   Hybrid: {
     name: "Hybrid",
-    iconName: "processor-symbolic",
+    iconName: "graphics-card-symbolic",
     command: "supergfxctl -m Hybrid",
   },
-  /* Dedicated: {
+  Dedicated: {
     name: "Dedicated",
     iconName: "graphics-card-symbolic",
     command: "supergfxctl -m Dedicated",
-  }, */
+  },
 };
 
 const GpuProfilesToggle = GObject.registerClass(
