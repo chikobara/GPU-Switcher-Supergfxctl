@@ -9,11 +9,10 @@ import * as Util from "resource:///org/gnome/shell/misc/util.js";
 import * as PopupMenu from "resource:///org/gnome/shell/ui/popupMenu.js";
 import { Extension } from "resource:///org/gnome/shell/extensions/extension.js";
 
-// Define GPU profiles with their names, icons, and commands
 const GPU_PROFILE_PARAMS = {
   Integrated: {
     name: "Integrated",
-    iconName: "computer-symbolic",
+    iconName: "cpu-symbolic",
     command: "supergfxctl -m Integrated",
   },
   Hybrid: {
@@ -21,10 +20,10 @@ const GPU_PROFILE_PARAMS = {
     iconName: "graphics-card-symbolic",
     command: "supergfxctl -m Hybrid",
   },
-  Dedicated: {
-    name: "Dedicated",
-    iconName: "graphics-card-symbolic",
-    command: "supergfxctl -m Dedicated",
+  Vfio: {
+    name: "Vfio",
+    iconName: "computer-symbolic",
+    command: "supergfxctl -m Vfio",
   },
 };
 
@@ -34,7 +33,7 @@ const GpuProfilesToggle = GObject.registerClass(
       super._init({ title: "GPU Mode" });
 
       this._profileItems = new Map();
-      this._activeProfile = null; // Will be set after running supergfxctl -g
+      this._activeProfile = null;
 
       this.connect("clicked", () => {
         this._sync();
@@ -92,6 +91,11 @@ const GpuProfilesToggle = GObject.registerClass(
     }
 
     _activateProfile(profile, command) {
+      if ((profile === "Vfio" && this._activeProfile === "Hybrid") ||
+          (profile === "Hybrid" && this._activeProfile === "Vfio")) {
+        return;
+      }
+
       try {
         let proc = Gio.Subprocess.new(
           ["sh", "-c", command],
@@ -103,8 +107,14 @@ const GpuProfilesToggle = GObject.registerClass(
             let [ok, stdout, stderr] = proc.communicate_utf8_finish(res);
             if (proc.get_successful()) {
               console.log(`Profile ${profile} activated successfully`);
+              const previousProfile = this._activeProfile;
               this._setActiveProfile(profile);
-              Util.spawnCommandLine("gnome-session-quit --logout");
+              if (
+                (previousProfile === "Integrated" && profile === "Hybrid") ||
+                (previousProfile === "Hybrid" && profile === "Integrated")
+              ) {
+                Util.spawnCommandLine("gnome-session-quit --logout");
+              }
             } else {
               console.error(
                 `Failed to activate profile ${profile}: ${stderr.trim()}`
@@ -176,6 +186,6 @@ export default class GpuSwitcherExtension extends Extension {
   disable() {
     this._indicator.quickSettingsItems.forEach((item) => item.destroy());
     this._indicator.destroy();
-    this._indicator = null; // Null out the indicator
+    this._indicator = null;
   }
 }
