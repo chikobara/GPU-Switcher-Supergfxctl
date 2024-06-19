@@ -12,12 +12,12 @@ import { Extension } from "resource:///org/gnome/shell/extensions/extension.js";
 const GPU_PROFILE_PARAMS = {
   Integrated: {
     name: "Integrated",
-    iconName: "cpu-symbolic",
+    iconName: "video-display-symbolic",
     command: "supergfxctl -m Integrated",
   },
   Hybrid: {
     name: "Hybrid",
-    iconName: "graphics-card-symbolic",
+    iconName: "video-joined-displays-symbolic",
     command: "supergfxctl -m Hybrid",
   },
   Vfio: {
