@@ -55,8 +55,41 @@ const GpuProfilesToggle = GObject.registerClass(
       this.menu.setHeader("graphics-card-symbolic", "GPU Mode");
       this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
-      this._addProfileToggles();
-      this._fetchCurrentProfile();
+      this._fetchSupportedProfiles();
+    }
+
+    _fetchSupportedProfiles() {
+      try {
+        let proc = Gio.Subprocess.new(
+          ["supergfxctl", "-s"],
+          Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_PIPE
+        );
+
+        proc.communicate_utf8_async(null, null, (proc, res) => {
+          try {
+            let [ok, stdout, stderr] = proc.communicate_utf8_finish(res);
+            if (ok) {
+              const supportedProfiles = JSON.parse(stdout.trim());
+              this._addProfileToggles(supportedProfiles);
+              this._fetchCurrentProfile();
+            } else {
+              console.error(`Failed to fetch supported profiles: ${stderr}`);
+              this._addProfileToggles(Object.keys(GPU_PROFILE_PARAMS));
+              this._fetchCurrentProfile();
+            }
+          } catch (e) {
+            console.error(
+              `Error while fetching supported profiles: ${e.message}`
+            );
+            this._addProfileToggles(Object.keys(GPU_PROFILE_PARAMS));
+            this._fetchCurrentProfile();
+          }
+        });
+      } catch (e) {
+        console.error(`Failed to execute supergfxctl: ${e.message}`);
+        this._addProfileToggles(Object.keys(GPU_PROFILE_PARAMS));
+        this._fetchCurrentProfile();
+      }
     }
 
     _fetchCurrentProfile() {
@@ -86,18 +119,21 @@ const GpuProfilesToggle = GObject.registerClass(
       }
     }
 
-    _addProfileToggles() {
-      for (const [profile, params] of Object.entries(GPU_PROFILE_PARAMS)) {
-        const item = new PopupMenu.PopupImageMenuItem(
-          params.name,
-          params.iconName
-        );
-        item.connect("activate", () => {
-          console.log(`Activating profile: ${profile}`);
-          this._activateProfile(profile, params.command);
-        });
-        this._profileItems.set(profile, item);
-        this._profileSection.addMenuItem(item);
+    _addProfileToggles(supportedProfiles) {
+      for (const profile of supportedProfiles) {
+        if (GPU_PROFILE_PARAMS[profile]) {
+          const params = GPU_PROFILE_PARAMS[profile];
+          const item = new PopupMenu.PopupImageMenuItem(
+            params.name,
+            params.iconName
+          );
+          item.connect("activate", () => {
+            console.log(`Activating profile: ${profile}`);
+            this._activateProfile(profile, params.command);
+          });
+          this._profileItems.set(profile, item);
+          this._profileSection.addMenuItem(item);
+        }
       }
     }
 
