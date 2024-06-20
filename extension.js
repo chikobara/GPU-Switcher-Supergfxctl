@@ -69,7 +69,9 @@ const GpuProfilesToggle = GObject.registerClass(
           try {
             let [ok, stdout, stderr] = proc.communicate_utf8_finish(res);
             if (ok) {
-              const supportedProfiles = JSON.parse(stdout.trim());
+              const supportedProfiles = this._parseSupportedProfiles(
+                stdout.trim()
+              );
               this._addProfileToggles(supportedProfiles);
               this._fetchCurrentProfile();
             } else {
@@ -89,6 +91,15 @@ const GpuProfilesToggle = GObject.registerClass(
         console.error(`Failed to execute supergfxctl: ${e.message}`);
         this._addProfileToggles(Object.keys(GPU_PROFILE_PARAMS));
         this._fetchCurrentProfile();
+      }
+    }
+
+    _parseSupportedProfiles(output) {
+      try {
+        return output.replace(/[\[\]\s]/g, "").split(",");
+      } catch (e) {
+        console.error(`Error parsing supported profiles: ${e.message}`);
+        return Object.keys(GPU_PROFILE_PARAMS);
       }
     }
 
