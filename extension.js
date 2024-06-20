@@ -9,7 +9,6 @@ import * as Util from "resource:///org/gnome/shell/misc/util.js";
 import * as PopupMenu from "resource:///org/gnome/shell/ui/popupMenu.js";
 import { Extension } from "resource:///org/gnome/shell/extensions/extension.js";
 
-// Define GPU profiles with their names, icons, and commands
 const GPU_PROFILE_PARAMS = {
   Integrated: {
     name: "Integrated",

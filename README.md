@@ -8,6 +8,9 @@ Supergfxctl v5.2.1-2
 
 asusctl v6.0.9.r0.gfaca084-1
 
+it supports all modes :
+Integrated, Hybrid, VFIO, AsusEgpu, AsusMuxDgpu
+
 ![screenshot example](./img/scr.png)
 
 ## Use this only if you
