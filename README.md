@@ -35,5 +35,5 @@ asusctl v6.0.9.r0.gfaca084-1
 - clone this repo
 
     ```bash
-    cp -rf GPU-Switcher-Supergfxctl ~/.local/share/gnome-extensions/gpu-switcher-supergfxctl@chikobara.github.io
+    cp -rf GPU-Switcher-Supergfxctl ~/.local/share/gnome-shell/extensions/gpu-switcher-supergfxctl@chikobara.github.io
     ```
