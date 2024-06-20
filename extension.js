@@ -9,6 +9,7 @@ import * as Util from "resource:///org/gnome/shell/misc/util.js";
 import * as PopupMenu from "resource:///org/gnome/shell/ui/popupMenu.js";
 import { Extension } from "resource:///org/gnome/shell/extensions/extension.js";
 
+// Define GPU profiles with their names, icons, and commands
 const GPU_PROFILE_PARAMS = {
   Integrated: {
     name: "Integrated",
@@ -24,6 +25,16 @@ const GPU_PROFILE_PARAMS = {
     name: "Vfio",
     iconName: "computer-symbolic",
     command: "supergfxctl -m Vfio",
+  },
+  AsusEgpu: {
+    name: "AsusEgpu",
+    iconName: "display-symbolic",
+    command: "supergfxctl -m AsusEgpu",
+  },
+  AsusMuxDgpu: {
+    name: "AsusMuxDgpu",
+    iconName: "video-display-symbolic",
+    command: "supergfxctl -m AsusMuxDgpu",
   },
 };
 
@@ -91,8 +102,17 @@ const GpuProfilesToggle = GObject.registerClass(
     }
 
     _activateProfile(profile, command) {
-      if ((profile === "Vfio" && this._activeProfile === "Hybrid") ||
-          (profile === "Hybrid" && this._activeProfile === "Vfio")) {
+      if (
+        (profile === "Vfio" && this._activeProfile === "Hybrid") ||
+        (profile === "Hybrid" && this._activeProfile === "Vfio")
+      ) {
+        console.error(
+          "Direct switching between Vfio and Hybrid profiles is not supported."
+        );
+        Main.notify(
+          "GPU Switcher",
+          "Direct switching between Vfio and Hybrid profiles is not supported."
+        );
         return;
       }
 
