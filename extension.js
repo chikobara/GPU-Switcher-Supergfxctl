@@ -8,7 +8,7 @@ import * as Main from "resource:///org/gnome/shell/ui/main.js";
 import * as Util from "resource:///org/gnome/shell/misc/util.js";
 import * as PopupMenu from "resource:///org/gnome/shell/ui/popupMenu.js";
 import { Extension } from "resource:///org/gnome/shell/extensions/extension.js";
-import { AppIndicator } from "gi://AyatanaAppIndicator3?version=0.1";
+import { AppIndicator3 } from "gi://AyatanaAppIndicator3?version=0.1";
 import { Gtk } from "gi://Gtk?version=3.0";
 
 const GPU_PROFILE_PARAMS = {
@@ -248,21 +248,21 @@ const GpuProfilesToggle = GObject.registerClass(
 
       this._menu = new Gtk.Menu();
 
-      const quitMennuItem = new Gtk.MenuItem();
-      quitMennuItem.set_label("Quit");
-      quitMennuItem.connect("activate", () => {
+      const quitMenuItem = new Gtk.MenuItem();
+      quitMenuItem.set_label("Quit");
+      quitMenuItem.connect("activate", () => {
         this._indicator.setStatus(AppIndicator3.IndicatorStatus.PASSIVE);
         Gtk.main_quit();
       });
-      this._menu.append(quitMennuItem);
+      this._menu.append(quitMenuItem);
       this._menu.show_all();
 
       this._indicator.setMenu(this._menu);
     }
 
     _updateTrayIndicator() {
-      if (this._indicator && this._activateProfile) {
-        const params = GPU_PROFILE_PARAMS[this._activateProfile];
+      if (this._indicator && this._activeProfile) {
+        const params = GPU_PROFILE_PARAMS[this._activeProfile];
         this._indicator.setIconFull(params.iconName, params.name);
       }
     }
