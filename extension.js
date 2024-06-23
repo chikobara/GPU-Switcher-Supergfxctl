@@ -1,6 +1,5 @@
 import Gio from "gi://Gio";
 import GObject from "gi://GObject";
-import St from "gi://St";
 import {
   QuickMenuToggle,
   SystemIndicator,
@@ -231,22 +230,6 @@ const GpuProfilesToggle = GObject.registerClass(
       this.set({ subtitle: params.name, iconName: params.iconName });
 
       this.checked = this._activeProfile !== "Hybrid";
-
-      // Update the tray icon to reflect the current profile
-      this._updateTrayIcon(params.iconName);
-    }
-
-    _updateTrayIcon(iconName) {
-      if (!this._indicatorIcon) {
-        this._indicatorIcon = new St.Icon({
-          style_class: "system-status-icon",
-        });
-        Main.panel.statusArea.aggregateMenu._indicators.insert_child_at_index(
-          this._indicatorIcon,
-          0
-        );
-      }
-      this._indicatorIcon.set_icon_name(iconName);
     }
   }
 );
