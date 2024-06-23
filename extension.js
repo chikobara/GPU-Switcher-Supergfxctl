@@ -1,5 +1,6 @@
 import Gio from "gi://Gio";
 import GObject from "gi://GObject";
+import St from "gi://St";
 import {
   QuickMenuToggle,
   SystemIndicator,
@@ -8,8 +9,6 @@ import * as Main from "resource:///org/gnome/shell/ui/main.js";
 import * as Util from "resource:///org/gnome/shell/misc/util.js";
 import * as PopupMenu from "resource:///org/gnome/shell/ui/popupMenu.js";
 import { Extension } from "resource:///org/gnome/shell/extensions/extension.js";
-import { AppIndicator3 } from "gi://AyatanaAppIndicator3?version=0.1";
-import { Gtk } from "gi://Gtk?version=3.0";
 
 const GPU_PROFILE_PARAMS = {
   Integrated: {
@@ -46,7 +45,6 @@ const GpuProfilesToggle = GObject.registerClass(
 
       this._profileItems = new Map();
       this._activeProfile = null;
-      this._indicator = null;
 
       this.connect("clicked", () => {
         this._sync();
@@ -58,7 +56,6 @@ const GpuProfilesToggle = GObject.registerClass(
       this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
       this._fetchSupportedProfiles();
-      this._createTrayIndicator();
     }
 
     _fetchSupportedProfiles() {
@@ -206,7 +203,6 @@ const GpuProfilesToggle = GObject.registerClass(
         console.log(`Setting active profile: ${profile}`);
         this._activeProfile = profile;
         this._sync();
-        this._updateTrayIndicator();
       } else {
         console.error(`Unknown profile: ${profile}`);
       }
@@ -235,36 +231,22 @@ const GpuProfilesToggle = GObject.registerClass(
       this.set({ subtitle: params.name, iconName: params.iconName });
 
       this.checked = this._activeProfile !== "Hybrid";
+
+      // Update the tray icon to reflect the current profile
+      this._updateTrayIcon(params.iconName);
     }
 
-    _createTrayIndicator() {
-      this._indicator = AppIndicator3.Indicator.new(
-        "gpu-switcher-indicator",
-        "video-display-symbolic",
-        AppIndicator3.IndicatorCategory.APPLICATION_STATUS
-      );
-      this._indicator.setStatus(AppIndicator3.IndicatorStatus.ACTIVE);
-      this._indicator.setAttentionIcon("video-display-symbolic");
-
-      this._menu = new Gtk.Menu();
-
-      const quitMenuItem = new Gtk.MenuItem();
-      quitMenuItem.set_label("Quit");
-      quitMenuItem.connect("activate", () => {
-        this._indicator.setStatus(AppIndicator3.IndicatorStatus.PASSIVE);
-        Gtk.main_quit();
-      });
-      this._menu.append(quitMenuItem);
-      this._menu.show_all();
-
-      this._indicator.setMenu(this._menu);
-    }
-
-    _updateTrayIndicator() {
-      if (this._indicator && this._activeProfile) {
-        const params = GPU_PROFILE_PARAMS[this._activeProfile];
-        this._indicator.setIconFull(params.iconName, params.name);
+    _updateTrayIcon(iconName) {
+      if (!this._indicatorIcon) {
+        this._indicatorIcon = new St.Icon({
+          style_class: "system-status-icon",
+        });
+        Main.panel.statusArea.aggregateMenu._indicators.insert_child_at_index(
+          this._indicatorIcon,
+          0
+        );
       }
+      this._indicatorIcon.set_icon_name(iconName);
     }
   }
 );
