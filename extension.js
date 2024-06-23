@@ -8,6 +8,7 @@ import * as Main from "resource:///org/gnome/shell/ui/main.js";
 import * as Util from "resource:///org/gnome/shell/misc/util.js";
 import * as PopupMenu from "resource:///org/gnome/shell/ui/popupMenu.js";
 import { Extension } from "resource:///org/gnome/shell/extensions/extension.js";
+import St from "gi://St";
 
 const GPU_PROFILE_PARAMS = {
   Integrated: {
@@ -44,6 +45,8 @@ const GpuProfilesToggle = GObject.registerClass(
 
       this._profileItems = new Map();
       this._activeProfile = null;
+      this._icon = new St.Icon({ style_class: "system-status-icon" });
+      this.add_child(this._icon);
 
       this.connect("clicked", () => {
         this._sync();
@@ -74,11 +77,19 @@ const GpuProfilesToggle = GObject.registerClass(
               this._addProfileToggles(supportedProfiles);
               this._fetchCurrentProfile();
             } else {
+              Main.notifyError(
+                "GPU Supergfxctl Switch",
+                `Failed to fetch supported profiles: ${stderr}`
+              );
               console.error(`Failed to fetch supported profiles: ${stderr}`);
               this._addProfileToggles(Object.keys(GPU_PROFILE_PARAMS));
               this._fetchCurrentProfile();
             }
           } catch (e) {
+            Main.notifyError(
+              "GPU Supergfxctl Swith",
+              `Error while fetching supported profiles: ${e.message}`
+            );
             console.error(
               `Error while fetching supported profiles: ${e.message}`
             );
@@ -87,6 +98,10 @@ const GpuProfilesToggle = GObject.registerClass(
           }
         });
       } catch (e) {
+        Main.notifyError(
+          "GPU Supergfxctl Switch",
+          `Failed to excute supergfxctl: ${e.message}`
+        );
         console.error(`Failed to execute supergfxctl: ${e.message}`);
         this._addProfileToggles(Object.keys(GPU_PROFILE_PARAMS));
         this._fetchCurrentProfile();
@@ -229,6 +244,7 @@ const GpuProfilesToggle = GObject.registerClass(
 
       this.set({ subtitle: params.name, iconName: params.iconName });
 
+      this._icon.gicon = Gio.icon_new_for_string(params.iconName);
       this.checked = this._activeProfile !== "Hybrid";
     }
   }
@@ -239,6 +255,8 @@ export const Indicator = GObject.registerClass(
     _init() {
       super._init();
       this.quickSettingsItems.push(new GpuProfilesToggle());
+
+      this.indicators.add_child(this._addProfileToggles._icon);
     }
   }
 );
