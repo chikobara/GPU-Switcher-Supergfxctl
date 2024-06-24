@@ -4,9 +4,9 @@ GPU Profile switcher Gnome-Shell-Extension for ASUS laptops using Supergfxctl
 
 Currently tested on Arch / Gnome 46 / X11
 
-Supergfxctl v5.2.1-2
+Supergfxctl v5.2.x
 
-asusctl v6.0.9.r0.gfaca084-1
+asusctl v6.0.x
 
 it supports all modes :
 Integrated, Hybrid, VFIO, AsusEgpu, AsusMuxDgpu
