@@ -87,7 +87,7 @@ const GpuProfilesToggle = GObject.registerClass(
             }
           } catch (e) {
             Main.notifyError(
-              "GPU Supergfxctl Swith",
+              "GPU Supergfxctl Switch",
               `Error while fetching supported profiles: ${e.message}`
             );
             console.error(
@@ -100,7 +100,7 @@ const GpuProfilesToggle = GObject.registerClass(
       } catch (e) {
         Main.notifyError(
           "GPU Supergfxctl Switch",
-          `Failed to excute supergfxctl: ${e.message}`
+          `Failed to execute supergfxctl: ${e.message}`
         );
         console.error(`Failed to execute supergfxctl: ${e.message}`);
         this._addProfileToggles(Object.keys(GPU_PROFILE_PARAMS));
@@ -256,7 +256,7 @@ export const Indicator = GObject.registerClass(
       super._init();
       this.quickSettingsItems.push(new GpuProfilesToggle());
 
-      this.indicators.add_child(this._addProfileToggles._icon);
+      this.indicators.add_child(this.quickSettingsItems[0]._icon);
     }
   }
 );
