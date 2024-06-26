@@ -246,6 +246,12 @@ const GpuProfilesToggle = GObject.registerClass(
 
       this._icon.gicon = Gio.icon_new_for_string(params.iconName);
       this.checked = this._activeProfile !== "Hybrid";
+
+      this._updatePanelIcon(params.iconName);
+    }
+
+    _updatePanelIcon(iconName) {
+      this._icon.gicon = Gio.icon_new_for_string(iconName);
     }
   }
 );
@@ -254,9 +260,10 @@ export const Indicator = GObject.registerClass(
   class Indicator extends SystemIndicator {
     _init() {
       super._init();
-      this.quickSettingsItems.push(new GpuProfilesToggle());
+      this._gpuProfilesToggle = new GpuProfilesToggle();
+      this.quickSettingsItems.push(this._gpuProfilesToggle);
 
-      this.indicators.add_child(this.quickSettingsItems[0]._icon);
+      this.indicators.add_child(this._gpuProfilesToggle._icon);
     }
   }
 );
