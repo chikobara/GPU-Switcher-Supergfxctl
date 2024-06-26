@@ -268,14 +268,69 @@ export const Indicator = GObject.registerClass(
   }
 );
 
+const GpuModeIndicator = GObject.registerClass(
+  class GpuModeIndicator extends QuickSettings.SystemIndicator {
+    _init() {
+      super._init();
+
+      this._icon = new St.Icon({
+        icon_name: "video-joined-displays-symbolic", // Default to Hybrid icon
+        style_class: "system-status-icon",
+      });
+
+      this.indicators.add_child(this._icon);
+
+      this._fetchCurrentProfile();
+    }
+
+    _fetchCurrentProfile() {
+      try {
+        let proc = Gio.Subprocess.new(
+          ["supergfxctl", "-g"],
+          Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_PIPE
+        );
+
+        proc.communicate_utf8_async(null, null, (proc, res) => {
+          try {
+            let [ok, stdout, stderr] = proc.communicate_utf8_finish(res);
+            if (ok && stdout.trim() in GPU_PROFILE_PARAMS) {
+              this._updateIcon(stdout.trim());
+            } else {
+              console.error(`Failed to fetch current profile: ${stderr}`);
+              this._updateIcon("Hybrid"); // Fallback to default
+            }
+          } catch (e) {
+            console.error(`Error while fetching current profile: ${e.message}`);
+            this._updateIcon("Hybrid"); // Fallback to default
+          }
+        });
+      } catch (e) {
+        console.error(`Failed to execute supergfxctl: ${e.message}`);
+        this._updateIcon("Hybrid"); // Fallback to default
+      }
+    }
+
+    _updateIcon(profile) {
+      if (GPU_PROFILE_PARAMS[profile]) {
+        console.log(`Updating icon to ${profile}`);
+        this._icon.icon_name = GPU_PROFILE_PARAMS[profile].iconName;
+      } else {
+        console.error(`Unknown profile: ${profile}`);
+      }
+    }
+  }
+);
+
 export default class GpuSwitcherExtension extends Extension {
   enable() {
     this._indicator = new Indicator();
     Main.panel.statusArea.quickSettings.addExternalIndicator(this._indicator);
+    Main.panel.statusArea.systemIndicator.addIndicator(this._indicator);
   }
 
   disable() {
     this._indicator.quickSettingsItems.forEach((item) => item.destroy());
+    this._indicator.indicators.forEach((Indicator) => Indicator.distroy());
     this._indicator.destroy();
     this._indicator = null;
   }
