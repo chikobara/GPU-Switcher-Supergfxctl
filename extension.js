@@ -8,8 +8,8 @@ import * as Main from "resource:///org/gnome/shell/ui/main.js";
 import * as Util from "resource:///org/gnome/shell/misc/util.js";
 import * as PopupMenu from "resource:///org/gnome/shell/ui/popupMenu.js";
 import { Extension } from "resource:///org/gnome/shell/extensions/extension.js";
-import St from "gi://St";
 
+// Define GPU profiles with their names, icons, and commands
 const GPU_PROFILE_PARAMS = {
   Integrated: {
     name: "Integrated",
@@ -45,8 +45,6 @@ const GpuProfilesToggle = GObject.registerClass(
 
       this._profileItems = new Map();
       this._activeProfile = null;
-      this._icon = new St.Icon({ style_class: "system-status-icon" });
-      this.add_child(this._icon);
 
       this.connect("clicked", () => {
         this._sync();
@@ -77,19 +75,11 @@ const GpuProfilesToggle = GObject.registerClass(
               this._addProfileToggles(supportedProfiles);
               this._fetchCurrentProfile();
             } else {
-              Main.notifyError(
-                "GPU Supergfxctl Switch",
-                `Failed to fetch supported profiles: ${stderr}`
-              );
               console.error(`Failed to fetch supported profiles: ${stderr}`);
               this._addProfileToggles(Object.keys(GPU_PROFILE_PARAMS));
               this._fetchCurrentProfile();
             }
           } catch (e) {
-            Main.notifyError(
-              "GPU Supergfxctl Switch",
-              `Error while fetching supported profiles: ${e.message}`
-            );
             console.error(
               `Error while fetching supported profiles: ${e.message}`
             );
@@ -98,10 +88,6 @@ const GpuProfilesToggle = GObject.registerClass(
           }
         });
       } catch (e) {
-        Main.notifyError(
-          "GPU Supergfxctl Switch",
-          `Failed to execute supergfxctl: ${e.message}`
-        );
         console.error(`Failed to execute supergfxctl: ${e.message}`);
         this._addProfileToggles(Object.keys(GPU_PROFILE_PARAMS));
         this._fetchCurrentProfile();
@@ -253,63 +239,7 @@ export const Indicator = GObject.registerClass(
   class Indicator extends SystemIndicator {
     _init() {
       super._init();
-      this._gpuProfilesToggle = new GpuProfilesToggle();
-      this.quickSettingsItems.push(this._gpuProfilesToggle);
-
-      this.indicators.add_child(this._gpuProfilesToggle._icon);
-    }
-  }
-);
-
-const GpuModeIndicator = GObject.registerClass(
-  class GpuModeIndicator extends SystemIndicator {
-    _init() {
-      super._init();
-
-      this._icon = new St.Icon({
-        icon_name: "video-joined-displays-symbolic", // Default to Hybrid icon
-        style_class: "system-status-icon",
-      });
-
-      this.indicators.add_child(this._icon);
-
-      this._fetchCurrentProfile();
-    }
-
-    _fetchCurrentProfile() {
-      try {
-        let proc = Gio.Subprocess.new(
-          ["supergfxctl", "-g"],
-          Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_PIPE
-        );
-
-        proc.communicate_utf8_async(null, null, (proc, res) => {
-          try {
-            let [ok, stdout, stderr] = proc.communicate_utf8_finish(res);
-            if (ok && stdout.trim() in GPU_PROFILE_PARAMS) {
-              this._updateIcon(stdout.trim());
-            } else {
-              console.error(`Failed to fetch current profile: ${stderr}`);
-              this._updateIcon("Hybrid"); // Fallback to default
-            }
-          } catch (e) {
-            console.error(`Error while fetching current profile: ${e.message}`);
-            this._updateIcon("Hybrid"); // Fallback to default
-          }
-        });
-      } catch (e) {
-        console.error(`Failed to execute supergfxctl: ${e.message}`);
-        this._updateIcon("Hybrid"); // Fallback to default
-      }
-    }
-
-    _updateIcon(profile) {
-      if (GPU_PROFILE_PARAMS[profile]) {
-        console.log(`Updating icon to ${profile}`);
-        this._icon.icon_name = GPU_PROFILE_PARAMS[profile].iconName;
-      } else {
-        console.error(`Unknown profile: ${profile}`);
-      }
+      this.quickSettingsItems.push(new GpuProfilesToggle());
     }
   }
 );
@@ -318,12 +248,10 @@ export default class GpuSwitcherExtension extends Extension {
   enable() {
     this._indicator = new Indicator();
     Main.panel.statusArea.quickSettings.addExternalIndicator(this._indicator);
-    Main.panel.statusArea.systemIndicator.addIndicator(this._indicator);
   }
 
   disable() {
     this._indicator.quickSettingsItems.forEach((item) => item.destroy());
-    this._indicator.indicators.forEach((Indicator) => Indicator.distroy());
     this._indicator.destroy();
     this._indicator = null;
   }
