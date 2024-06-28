@@ -244,14 +244,7 @@ const GpuProfilesToggle = GObject.registerClass(
 
       this.set({ subtitle: params.name, iconName: params.iconName });
 
-      this._icon.gicon = Gio.icon_new_for_string(params.iconName);
       this.checked = this._activeProfile !== "Hybrid";
-
-      this._updatePanelIcon(params.iconName);
-    }
-
-    _updatePanelIcon(iconName) {
-      this._icon.gicon = Gio.icon_new_for_string(iconName);
     }
   }
 );
@@ -269,7 +262,7 @@ export const Indicator = GObject.registerClass(
 );
 
 const GpuModeIndicator = GObject.registerClass(
-  class GpuModeIndicator extends QuickSettings.SystemIndicator {
+  class GpuModeIndicator extends SystemIndicator {
     _init() {
       super._init();
 
