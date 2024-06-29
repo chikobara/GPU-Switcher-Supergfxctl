@@ -44,6 +44,13 @@ const GPU_PROFILE_PARAMS = {
 };
 
 const GpuProfilesToggle = GObject.registerClass(
+  {
+    Signals: {
+      "profile-changed": {
+        param_types: [GObject.TYPE_STRING],
+      },
+    },
+  },
   class GpuProfilesToggle extends QuickMenuToggle {
     _init() {
       super._init({ title: "GPU Mode" });
@@ -207,6 +214,7 @@ const GpuProfilesToggle = GObject.registerClass(
       if (GPU_PROFILE_PARAMS[profile]) {
         console.log(`Setting active profile: ${profile}`);
         this._activeProfile = profile;
+        this.emit("profile-changed", profile); // Emit signal when profile changes
         this._sync();
       } else {
         console.error(`Unknown profile: ${profile}`);
@@ -240,32 +248,38 @@ const GpuProfilesToggle = GObject.registerClass(
   }
 );
 
-export const Indicator = GObject.registerClass(
-  class Indicator extends SystemIndicator {
-    _init() {
-      super._init();
-      this.quickSettingsItems.push(new GpuProfilesToggle());
-    }
-  }
-);
-
 const iconIndicator = GObject.registerClass(
   class iconIndicator extends PanelMenu.Button {
     _init() {
       super._init(0.0, _("My Shiny Indicator"));
 
-      this.add_child(
-        new St.Icon({
-          icon_name: "video-joined-displays-symbolic",
-          style_class: "system-status-icon",
-        })
-      );
+      this._icon = new St.Icon({
+        icon_name: "video-joined-displays-symbolic",
+        style_class: "system-status-icon",
+      });
+      this.add_child(this._icon);
 
       let item = new PopupMenu.PopupMenuItem(_("Show Notification"));
       item.connect("activate", () => {
-        Main.notify(_("test"));
+        Main.notify(_("Whatʼs up, folks?"));
       });
       this.menu.addMenuItem(item);
+
+      this._toggle = new GpuProfilesToggle();
+      this._toggle.connect("profile-changed", (toggle, profile) => {
+        this._updateIcon(profile);
+      });
+
+      // Fetch initial profile and set icon accordingly
+      this._toggle._fetchCurrentProfile();
+    }
+
+    _updateIcon(profile) {
+      if (GPU_PROFILE_PARAMS[profile]) {
+        this._icon.icon_name = GPU_PROFILE_PARAMS[profile].iconName;
+      } else {
+        console.error(`Unknown profile: ${profile}`);
+      }
     }
   }
 );
