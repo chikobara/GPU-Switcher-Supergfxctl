@@ -42,7 +42,6 @@ const GPU_PROFILE_PARAMS = {
     command: "supergfxctl -m AsusMuxDgpu",
   },
 };
-
 const GpuProfilesToggle = GObject.registerClass(
   {
     Signals: {
@@ -248,6 +247,16 @@ const GpuProfilesToggle = GObject.registerClass(
   }
 );
 
+const Indicator = GObject.registerClass(
+  class Indicator extends SystemIndicator {
+    _init() {
+      super._init();
+      this._toggle = new GpuProfilesToggle();
+      this.quickSettingsItems.push(this._toggle);
+    }
+  }
+);
+
 const iconIndicator = GObject.registerClass(
   class iconIndicator extends PanelMenu.Button {
     _init() {
@@ -283,6 +292,7 @@ const iconIndicator = GObject.registerClass(
     }
   }
 );
+
 export default class GpuSwitcherExtension extends Extension {
   enable() {
     this._iconIndicator = new iconIndicator();
