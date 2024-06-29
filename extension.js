@@ -1,18 +1,13 @@
 import Gio from "gi://Gio";
 import GObject from "gi://GObject";
-import St from "gi://St";
 import {
   QuickMenuToggle,
   SystemIndicator,
 } from "resource:///org/gnome/shell/ui/quickSettings.js";
 import * as Main from "resource:///org/gnome/shell/ui/main.js";
 import * as Util from "resource:///org/gnome/shell/misc/util.js";
-import * as PanelMenu from "resource:///org/gnome/shell/ui/panelMenu.js";
 import * as PopupMenu from "resource:///org/gnome/shell/ui/popupMenu.js";
-import {
-  Extension,
-  gettext as _,
-} from "resource:///org/gnome/shell/extensions/extension.js";
+import { Extension } from "resource:///org/gnome/shell/extensions/extension.js";
 
 // Define GPU profiles with their names, icons, and commands
 const GPU_PROFILE_PARAMS = {
@@ -42,14 +37,8 @@ const GPU_PROFILE_PARAMS = {
     command: "supergfxctl -m AsusMuxDgpu",
   },
 };
+
 const GpuProfilesToggle = GObject.registerClass(
-  {
-    Signals: {
-      "profile-changed": {
-        param_types: [GObject.TYPE_STRING],
-      },
-    },
-  },
   class GpuProfilesToggle extends QuickMenuToggle {
     _init() {
       super._init({ title: "GPU Mode" });
@@ -213,7 +202,6 @@ const GpuProfilesToggle = GObject.registerClass(
       if (GPU_PROFILE_PARAMS[profile]) {
         console.log(`Setting active profile: ${profile}`);
         this._activeProfile = profile;
-        this.emit("profile-changed", profile); // Emit signal when profile changes
         this._sync();
       } else {
         console.error(`Unknown profile: ${profile}`);
@@ -247,56 +235,17 @@ const GpuProfilesToggle = GObject.registerClass(
   }
 );
 
-const Indicator = GObject.registerClass(
+export const Indicator = GObject.registerClass(
   class Indicator extends SystemIndicator {
     _init() {
       super._init();
-      this._toggle = new GpuProfilesToggle();
-      this.quickSettingsItems.push(this._toggle);
-    }
-  }
-);
-
-const iconIndicator = GObject.registerClass(
-  class iconIndicator extends PanelMenu.Button {
-    _init() {
-      super._init(0.0, _("My Shiny Indicator"));
-
-      this._icon = new St.Icon({
-        icon_name: "video-joined-displays-symbolic",
-        style_class: "system-status-icon",
-      });
-      this.add_child(this._icon);
-
-      let item = new PopupMenu.PopupMenuItem(_("Show Notification"));
-      item.connect("activate", () => {
-        Main.notify(_("Whatʼs up, folks?"));
-      });
-      this.menu.addMenuItem(item);
-
-      this._toggle = new GpuProfilesToggle();
-      this._toggle.connect("profile-changed", (toggle, profile) => {
-        this._updateIcon(profile);
-      });
-
-      // Fetch initial profile and set icon accordingly
-      this._toggle._fetchCurrentProfile();
-    }
-
-    _updateIcon(profile) {
-      if (GPU_PROFILE_PARAMS[profile]) {
-        this._icon.icon_name = GPU_PROFILE_PARAMS[profile].iconName;
-      } else {
-        console.error(`Unknown profile: ${profile}`);
-      }
+      this.quickSettingsItems.push(new GpuProfilesToggle());
     }
   }
 );
 
 export default class GpuSwitcherExtension extends Extension {
   enable() {
-    this._iconIndicator = new iconIndicator();
-    Main.panel.addToStatusArea(this.uuid, this._iconIndicator);
     this._indicator = new Indicator();
     Main.panel.statusArea.quickSettings.addExternalIndicator(this._indicator);
   }
@@ -305,7 +254,5 @@ export default class GpuSwitcherExtension extends Extension {
     this._indicator.quickSettingsItems.forEach((item) => item.destroy());
     this._indicator.destroy();
     this._indicator = null;
-    this._iconIndicator.destroy();
-    this._iconIndicator = null;
   }
 }
