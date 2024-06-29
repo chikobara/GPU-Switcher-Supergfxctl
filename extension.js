@@ -231,16 +231,6 @@ const GpuProfilesToggle = GObject.registerClass(
       this.set({ subtitle: params.name, iconName: params.iconName });
 
       this.checked = this._activeProfile !== "Hybrid";
-
-      // Update the icon indicator in the QuickSettings
-      this.quickSettingsItems.forEach((item) => {
-        item.setIcon(params.iconName);
-      });
-    }
-
-    setIcon(iconName) {
-      this.gicon = Gio.icon_new_for_string(iconName);
-      this.icon.gicon = this.gicon;
     }
   }
 );
@@ -250,11 +240,6 @@ export const Indicator = GObject.registerClass(
     _init() {
       super._init();
       this.quickSettingsItems.push(new GpuProfilesToggle());
-      this._icon = new QuickMenuToggle({
-        style_class: "system-status-icon",
-        icon_name: "graphics-card-symbolic",
-      });
-      this.add_child(this._icon);
     }
   }
 );
