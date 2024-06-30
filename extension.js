@@ -65,7 +65,7 @@ const GpuProfilesToggle = GObject.registerClass(
       this._activeProfile = null;
 
       this.headerIcon = Gio.icon_new_for_string(
-        `${this._path}/ico/pci_card_symbolic.svg`
+        `${this._path}/ico/pci-card-symbolic.svg`
       );
       this._profileSection = new PopupMenu.PopupMenuSection();
       this.menu.addMenuItem(this._profileSection);
@@ -262,21 +262,9 @@ export const Indicator = GObject.registerClass(
     _init(path) {
       super._init();
 
-      //create a container for the icon
-      this._iconContainer = new St.BoxLayout({
-        style_class: "panel-status-menu-box",
-      });
-      this.add_child(this._iconContainer);
-      // this._icon = this.add_child(
-      //   new St.Icon({ style_class: "system-status-icon" })
-      // );
-
-      //create the icon for the system tray
-      this._icon = new St.Icon({
-        style_class: "system-status-icon",
-        icon_name: "video-display-symbolic",
-      });
-      this._iconContainer.add_child(this._icon);
+      this._indicator = this._addIndicator();
+      this._indicator.icon_name = "video-display-symbolic"; // Default icon
+      this.indicatorIndex = 0;
 
       //create the quick settings toggle
       this._toggle = new GpuProfilesToggle(path);
@@ -287,8 +275,22 @@ export const Indicator = GObject.registerClass(
         this._updateIcon.bind(this)
       );
       this._updateIcon();
+
+      // Try to insert the indicator at a specific index
+      this._insertIndicator();
     }
 
+    _insertIndicator() {
+      const QuickSettingsMenu = Main.panel.statusArea.quickSettings;
+      if (QuickSettingsMenu && QuickSettingsMenu._indicators) {
+        QuickSettingsMenu._indicators.insert_child_at_index(
+          this,
+          this.indicatorIndex
+        );
+      } else {
+        console.warn("Unable to insert indicator at specific index");
+      }
+    }
     _updateIcon() {
       const activeProfile = this._toggle.activeProfile;
       if (activeProfile && GPU_PROFILE_PARAMS[activeProfile]) {
@@ -305,12 +307,17 @@ export const Indicator = GObject.registerClass(
 export default class GpuSwitcherExtension extends Extension {
   enable() {
     this._indicator = new Indicator(this.path);
-    Main.panel.statusArea.quickSettings.addExternalIndicator(this._indicator);
   }
 
   disable() {
-    this._indicator.quickSettingsItems.forEach((item) => item.destroy());
-    this._indicator.destroy();
-    this._indicator = null;
+    if (this._indicator) {
+      // Remove the indicator from its parent
+      const parent = this._indicator.get_parent();
+      if (parent) {
+        parent.remove_child(this._indicator);
+      }
+      this._indicator.destroy();
+      this._indicator = null;
+    }
   }
 }
