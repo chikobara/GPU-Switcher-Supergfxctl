@@ -62,6 +62,7 @@ const GpuProfilesToggle = GObject.registerClass(
       });
 
       this._path = path;
+      this._activeProfile = null;
 
       this.headerIcon = Gio.icon_new_for_string(
         `${this._path}/ico/pci_card_symbolic.svg`
@@ -265,7 +266,7 @@ export const Indicator = GObject.registerClass(
         new St.Icon({ style_class: "system-status-icon" })
       );
       this._toggle = new GpuProfilesToggle(path);
-      this.quickSettingsItems.push(new GpuProfilesToggle(path));
+      this.quickSettingsItems.push(this._toggle);
 
       this._toggle.connect(
         "notify::active-profile",
@@ -275,10 +276,13 @@ export const Indicator = GObject.registerClass(
     }
 
     _updateIcon() {
-      const activateProfile = this._toggle.activeProfile;
-      const params = GPU_PROFILE_PARAMS[activeProfile];
-      if (params) {
+      const activeProfile = this._toggle.activeProfile;
+      if (activeProfile && GPU_PROFILE_PARAMS[activeProfile]) {
+        const params = GPU_PROFILE_PARAMS[activeProfile];
         this._icon.gicon = Gio.icon_new_for_string(params.iconName);
+        this._icon.visible = true;
+      } else {
+        this._icon.visible = false;
       }
     }
   }
