@@ -274,10 +274,10 @@ export const Indicator = GObject.registerClass(
         "notify::active-profile",
         this._updateIcon.bind(this)
       );
-      this._updateIcon();
 
       // Try to insert the indicator at a specific index
       this._insertIndicator();
+      this._updateIcon();
     }
 
     _insertIndicator() {
@@ -295,11 +295,16 @@ export const Indicator = GObject.registerClass(
       const activeProfile = this._toggle.activeProfile;
       if (activeProfile && GPU_PROFILE_PARAMS[activeProfile]) {
         const params = GPU_PROFILE_PARAMS[activeProfile];
-        this._icon.gicon = Gio.icon_new_for_string(params.iconName);
-        this._icon.visible = true;
+        this._indicator.icon_name = params.iconName;
+        this._indicator.visible = true;
       } else {
-        this._icon.visible = false;
+        this._indicator.icon_name = "video-display-symbolic"; // Default icon
+        this._indicator.visible = true; // Always keep it visible, change this if you want it to hide
       }
+      // Log for debugging
+      console.log(
+        `Updated icon: ${this._indicator.icon_name}, Visible: ${this._indicator.visible}`
+      );
     }
   }
 );
@@ -307,9 +312,11 @@ export const Indicator = GObject.registerClass(
 export default class GpuSwitcherExtension extends Extension {
   enable() {
     this._indicator = new Indicator(this.path);
+    Main.panel.statusArea.quickSettings.addExternalIndicator(this._indicator);
   }
 
   disable() {
+    this._indicator.quickSettingsItems.forEach((item) => item.destroy());
     if (this._indicator) {
       // Remove the indicator from its parent
       const parent = this._indicator.get_parent();
