@@ -54,7 +54,7 @@ const GpuProfilesToggle = GObject.registerClass(
       );
       this._profileSection = new PopupMenu.PopupMenuSection();
       this.menu.addMenuItem(this._profileSection);
-      this.menu.setHeader(headerIcon, "GPU Mode");
+      this.menu.setHeader(this.headerIcon, "GPU Mode");
       this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
       this._fetchSupportedProfiles();
