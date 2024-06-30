@@ -40,7 +40,7 @@ const GPU_PROFILE_PARAMS = {
 
 const GpuProfilesToggle = GObject.registerClass(
   class GpuProfilesToggle extends QuickMenuToggle {
-    _init() {
+    _init(path) {
       super._init({ title: "GPU Mode" });
 
       this._profileItems = new Map();
@@ -48,6 +48,8 @@ const GpuProfilesToggle = GObject.registerClass(
       this.connect("clicked", () => {
         this._sync();
       });
+
+      this._path = path;
 
       this.headerIcon = Gio.icon_new_for_string(
         `${this._path}/ico/pci_card_symbolic.svg`
@@ -239,16 +241,16 @@ const GpuProfilesToggle = GObject.registerClass(
 
 export const Indicator = GObject.registerClass(
   class Indicator extends SystemIndicator {
-    _init() {
+    _init(path) {
       super._init();
-      this.quickSettingsItems.push(new GpuProfilesToggle());
+      this.quickSettingsItems.push(new GpuProfilesToggle(path));
     }
   }
 );
 
 export default class GpuSwitcherExtension extends Extension {
   enable() {
-    this._indicator = new Indicator();
+    this._indicator = new Indicator(this.path);
     Main.panel.statusArea.quickSettings.addExternalIndicator(this._indicator);
   }
 
