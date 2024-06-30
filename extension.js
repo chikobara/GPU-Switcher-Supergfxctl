@@ -45,14 +45,16 @@ const GpuProfilesToggle = GObject.registerClass(
 
       this._profileItems = new Map();
       this._activeProfile = null;
-
       this.connect("clicked", () => {
         this._sync();
       });
 
+      this.headerIcon = Gio.icon_new_for_string(
+        `${this._path}/ico/${pci_card_symbolic}.svg`
+      );
       this._profileSection = new PopupMenu.PopupMenuSection();
       this.menu.addMenuItem(this._profileSection);
-      this.menu.setHeader("graphics-card-symbolic", "GPU Mode");
+      this.menu.setHeader("headerIcon", "GPU Mode");
       this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
       this._fetchSupportedProfiles();
