@@ -262,9 +262,23 @@ export const Indicator = GObject.registerClass(
     _init(path) {
       super._init();
 
-      this._icon = this.add_child(
-        new St.Icon({ style_class: "system-status-icon" })
-      );
+      //create a container for the icon
+      this._iconContainer = new St.BoxLayout({
+        style_class: "panel-status-menu-box",
+      });
+      this.add_child(this._iconContainer);
+      // this._icon = this.add_child(
+      //   new St.Icon({ style_class: "system-status-icon" })
+      // );
+
+      //create the icon for the system tray
+      this._icon = new St.Icon({
+        style_class: "system-status-icon",
+        icon_name: "video-display-symbolic",
+      });
+      this._iconContainer.add_child(this._icon);
+
+      //create the quick settings toggle
       this._toggle = new GpuProfilesToggle(path);
       this.quickSettingsItems.push(this._toggle);
 
