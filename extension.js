@@ -1,4 +1,5 @@
 import Gio from "gi://Gio";
+import St from "gi://St";
 import GObject from "gi://GObject";
 import {
   QuickMenuToggle,
@@ -39,6 +40,17 @@ const GPU_PROFILE_PARAMS = {
 };
 
 const GpuProfilesToggle = GObject.registerClass(
+  {
+    Properties: {
+      "active-profile": GObject.ParamSpec.string(
+        "active-profile",
+        "Active Profile",
+        "The currently active GPU profile",
+        GObject.ParamFlags.READWRITE,
+        null
+      ),
+    },
+  },
   class GpuProfilesToggle extends QuickMenuToggle {
     _init(path) {
       super._init({ title: "GPU Mode" });
@@ -206,10 +218,15 @@ const GpuProfilesToggle = GObject.registerClass(
       if (GPU_PROFILE_PARAMS[profile]) {
         console.log(`Setting active profile: ${profile}`);
         this._activeProfile = profile;
+        this.notify("active-profile");
         this._sync();
       } else {
         console.error(`Unknown profile: ${profile}`);
       }
+    }
+
+    get activeProfile() {
+      return this._activeProfile;
     }
 
     _sync() {
@@ -243,7 +260,26 @@ export const Indicator = GObject.registerClass(
   class Indicator extends SystemIndicator {
     _init(path) {
       super._init();
+
+      this._icon = this.add_child(
+        new St.Icon({ style_class: "system-status-icon" })
+      );
+      this._toggle = new GpuProfilesToggle(path);
       this.quickSettingsItems.push(new GpuProfilesToggle(path));
+
+      this._toggle.connect(
+        "notify::active-profile",
+        this._updateIcon.bind(this)
+      );
+      this._updateIcon();
+    }
+
+    _updateIcon() {
+      const activateProfile = this._toggle.activeProfile;
+      const params = GPU_PROFILE_PARAMS[activeProfile];
+      if (params) {
+        this._icon.gicon = Gio.icon_new_for_string(params.iconName);
+      }
     }
   }
 );
