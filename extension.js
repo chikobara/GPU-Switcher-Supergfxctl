@@ -65,7 +65,7 @@ const GpuProfilesToggle = GObject.registerClass(
       this._activeProfile = null;
 
       this.headerIcon = Gio.icon_new_for_string(
-        `${this._path}/ico/pci_card_symbolic.svg`
+        `${this._path}/icons/pci-card-symbolic.svg`
       );
       this._profileSection = new PopupMenu.PopupMenuSection();
       this.menu.addMenuItem(this._profileSection);
