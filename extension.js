@@ -9,13 +9,7 @@ import * as Main from "resource:///org/gnome/shell/ui/main.js";
 import * as Util from "resource:///org/gnome/shell/misc/util.js";
 import * as PopupMenu from "resource:///org/gnome/shell/ui/popupMenu.js";
 import { Extension } from "resource:///org/gnome/shell/extensions/extension.js";
-/*
-computer-symbolic
-drive-harddisk-solidstate-symbolic
-applications-engineering-symbolic
-display-projector-symbolic
-drive-multidisk-symbolic
-*/
+
 const GPU_PROFILE_PARAMS = {
   Integrated: {
     name: "Integrated",
@@ -71,6 +65,8 @@ const GpuProfilesToggle = GObject.registerClass(
 
       this._path = path;
       this._activeProfile = null;
+
+      this._retryTimeoutId = null;
 
       this.headerIcon = Gio.icon_new_for_string(
         `${this._path}/ico/pci-card-symbolic.svg`
@@ -151,6 +147,7 @@ const GpuProfilesToggle = GObject.registerClass(
                   onFailure,
                   retryCount + 1
                 );
+                this._retryTimeoutId = null;
                 return GLib.SOURCE_REMOVE;
               });
             } else {
@@ -274,6 +271,13 @@ const GpuProfilesToggle = GObject.registerClass(
 
       this.checked = this._activeProfile !== "Hybrid";
     }
+
+    _clearRetryTimeout() {
+      if (this._retryTimeoutId !== null) {
+        GLib.SOURCE_REMOVE(this._retryTimeoutId);
+        this._retryTimeoutId = null;
+      }
+    }
   }
 );
 
@@ -339,6 +343,12 @@ export default class GpuSwitcherExtension extends Extension {
   disable() {
     this._indicator.quickSettingsItems.forEach((item) => item.destroy());
     if (this._indicator) {
+      this._indicator.quickSettingsItems.forEach((item) => {
+        if (item instanceof GpuProfilesToggle) {
+          item._clearRetryTimeout();
+        }
+        item.destroy();
+      });
       // Remove the indicator from its parent
       const parent = this._indicator.get_parent();
       if (parent) {
