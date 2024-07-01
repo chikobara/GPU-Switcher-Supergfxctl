@@ -59,14 +59,13 @@ const GpuProfilesToggle = GObject.registerClass(
 
       this._profileItems = new Map();
       this._activeProfile = null;
+      this._retryTimeoutId = null;
       this.connect("clicked", () => {
         this._sync();
       });
 
       this._path = path;
       this._activeProfile = null;
-
-      this._retryTimeoutId = null;
 
       this.headerIcon = Gio.icon_new_for_string(
         `${this._path}/ico/pci-card-symbolic.svg`
@@ -140,16 +139,20 @@ const GpuProfilesToggle = GObject.registerClass(
               onSuccess(stdout);
             } else if (retryCount < MAX_RETRIES) {
               console.warn(`Command failed, retrying in ${RETRY_DELAY}ms...`);
-              GLib.timeout_add(GLib.PRIORITY_DEFAULT, RETRY_DELAY, () => {
-                this._executeCommandWithRetry(
-                  command,
-                  onSuccess,
-                  onFailure,
-                  retryCount + 1
-                );
-                this._retryTimeoutId = null;
-                return GLib.SOURCE_REMOVE;
-              });
+              this._retryTimeoutId = GLib.timeout_add(
+                GLib.PRIORITY_DEFAULT,
+                RETRY_DELAY,
+                () => {
+                  this._executeCommandWithRetry(
+                    command,
+                    onSuccess,
+                    onFailure,
+                    retryCount + 1
+                  );
+                  this._retryTimeoutId = null;
+                  return GLib.SOURCE_REMOVE;
+                }
+              );
             } else {
               console.error(
                 `Command failed after ${MAX_RETRIES} attempts: ${stderr}`
@@ -164,6 +167,13 @@ const GpuProfilesToggle = GObject.registerClass(
       } catch (e) {
         console.error(`Failed to execute command: ${e.message}`);
         onFailure();
+      }
+    }
+
+    _clearRetryTimeout() {
+      if (this._retryTimeoutId !== null) {
+        GLib.source_remove(this._retryTimeoutId);
+        this._retryTimeoutId = null;
       }
     }
 
@@ -270,13 +280,6 @@ const GpuProfilesToggle = GObject.registerClass(
       this.set({ subtitle: params.name, iconName: params.iconName });
 
       this.checked = this._activeProfile !== "Hybrid";
-    }
-
-    _clearRetryTimeout() {
-      if (this._retryTimeoutId !== null) {
-        GLib.SOURCE_REMOVE(this._retryTimeoutId);
-        this._retryTimeoutId = null;
-      }
     }
   }
 );
