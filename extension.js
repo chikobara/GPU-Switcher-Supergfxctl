@@ -9,16 +9,22 @@ import * as Main from "resource:///org/gnome/shell/ui/main.js";
 import * as Util from "resource:///org/gnome/shell/misc/util.js";
 import * as PopupMenu from "resource:///org/gnome/shell/ui/popupMenu.js";
 import { Extension } from "resource:///org/gnome/shell/extensions/extension.js";
-
+/*
+computer-symbolic
+drive-harddisk-solidstate-symbolic
+applications-engineering-symbolic
+display-projector-symbolic
+drive-multidisk-symbolic
+*/
 const GPU_PROFILE_PARAMS = {
   Integrated: {
     name: "Integrated",
-    iconName: "computer-symbolic",
+    iconName: "video-single-display-symbolic",
     command: "supergfxctl -m Integrated",
   },
   Hybrid: {
     name: "Hybrid",
-    iconName: "drive-harddisk-solidstate-symbolic",
+    iconName: "video-joined-displays-symbolic",
     command: "supergfxctl -m Hybrid",
   },
   Vfio: {
