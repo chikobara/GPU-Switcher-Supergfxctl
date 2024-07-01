@@ -350,6 +350,7 @@ export default class GpuSwitcherExtension extends Extension {
           item._clearRetryTimeout();
         }
         item.destroy();
+        console.log("disabled");
       });
       // Remove the indicator from its parent
       const parent = this._indicator.get_parent();
