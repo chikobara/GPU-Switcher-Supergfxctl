@@ -344,7 +344,6 @@ export default class GpuSwitcherExtension extends Extension {
   }
 
   disable() {
-    this._indicator.quickSettingsItems.forEach((item) => item.destroy());
     if (this._indicator) {
       this._indicator.quickSettingsItems.forEach((item) => {
         if (item instanceof GpuProfilesToggle) {
