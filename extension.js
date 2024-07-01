@@ -38,6 +38,9 @@ const GPU_PROFILE_PARAMS = {
   },
 };
 
+const RETRY_DELAY = 1000;
+const MAX_RETRIES = 3;
+
 const GpuProfilesToggle = GObject.registerClass(
   {
     Properties: {
@@ -75,39 +78,21 @@ const GpuProfilesToggle = GObject.registerClass(
     }
 
     _fetchSupportedProfiles() {
-      try {
-        let proc = Gio.Subprocess.new(
-          ["supergfxctl", "-s"],
-          Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_PIPE
-        );
-
-        proc.communicate_utf8_async(null, null, (proc, res) => {
-          try {
-            let [ok, stdout, stderr] = proc.communicate_utf8_finish(res);
-            if (ok) {
-              const supportedProfiles = this._parseSupportedProfiles(
-                stdout.trim()
-              );
-              this._addProfileToggles(supportedProfiles);
-              this._fetchCurrentProfile();
-            } else {
-              console.error(`Failed to fetch supported profiles: ${stderr}`);
-              this._addProfileToggles(Object.keys(GPU_PROFILE_PARAMS));
-              this._fetchCurrentProfile();
-            }
-          } catch (e) {
-            console.error(
-              `Error while fetching supported profiles: ${e.message}`
-            );
-            this._addProfileToggles(Object.keys(GPU_PROFILE_PARAMS));
-            this._fetchCurrentProfile();
-          }
-        });
-      } catch (e) {
-        console.error(`Failed to execute supergfxctl: ${e.message}`);
-        this._addProfileToggles(Object.keys(GPU_PROFILE_PARAMS));
-        this._fetchCurrentProfile();
-      }
+      this._executeCommandWithRetry(
+        ["supergfxctl", "-s"],
+        (stdout) => {
+          const supportedProfiles = this._parseSupportedProfiles(stdout.trim());
+          this._addProfileToggles(supportedProfiles);
+          this._fetchCurrentProfile();
+        },
+        () => {
+          console.error(
+            "Failed to fetch supported profiles after multiple attempts"
+          );
+          this._addProfileToggles(Object.keys(GPU_PROFILE_PARAMS));
+          this._fetchCurrentProfile();
+        }
+      );
     }
 
     _parseSupportedProfiles(output) {
@@ -120,29 +105,62 @@ const GpuProfilesToggle = GObject.registerClass(
     }
 
     _fetchCurrentProfile() {
+      this._executeCommandWithRetry(
+        ["supergfxctl", "-g"],
+        (stdout) => {
+          if (stdout.trim() in GPU_PROFILE_PARAMS) {
+            this._setActiveProfile(stdout.trim());
+          } else {
+            console.error(`Unknown profile returned: ${stdout.trim()}`);
+            this._setActiveProfile("Hybrid"); // Fallback to default
+          }
+        },
+        () => {
+          console.error(
+            "Failed to fetch current profile after multiple attempts"
+          );
+          this._setActiveProfile("Hybrid"); // Fallback to default
+        }
+      );
+    }
+
+    _executeCommandWithRetry(command, onSuccess, onFailure, retryCount = 0) {
       try {
         let proc = Gio.Subprocess.new(
-          ["supergfxctl", "-g"],
+          command,
           Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_PIPE
         );
 
         proc.communicate_utf8_async(null, null, (proc, res) => {
           try {
             let [ok, stdout, stderr] = proc.communicate_utf8_finish(res);
-            if (ok && stdout.trim() in GPU_PROFILE_PARAMS) {
-              this._setActiveProfile(stdout.trim());
+            if (ok) {
+              onSuccess(stdout);
+            } else if (retryCount < MAX_RETRIES) {
+              console.warn(`Command failed, retrying in ${RETRY_DELAY}ms...`);
+              GLib.timeout_add(GLib.PRIORITY_DEFAULT, RETRY_DELAY, () => {
+                this._executeCommandWithRetry(
+                  command,
+                  onSuccess,
+                  onFailure,
+                  retryCount + 1
+                );
+                return GLib.SOURCE_REMOVE;
+              });
             } else {
-              console.error(`Failed to fetch current profile: ${stderr}`);
-              this._setActiveProfile("Hybrid"); // Fallback to default
+              console.error(
+                `Command failed after ${MAX_RETRIES} attempts: ${stderr}`
+              );
+              onFailure();
             }
           } catch (e) {
-            console.error(`Error while fetching current profile: ${e.message}`);
-            this._setActiveProfile("Hybrid"); // Fallback to default
+            console.error(`Error in command execution: ${e.message}`);
+            onFailure();
           }
         });
       } catch (e) {
-        console.error(`Failed to execute supergfxctl: ${e.message}`);
-        this._setActiveProfile("Hybrid"); // Fallback to default
+        console.error(`Failed to execute command: ${e.message}`);
+        onFailure();
       }
     }
 
@@ -165,6 +183,13 @@ const GpuProfilesToggle = GObject.registerClass(
     }
 
     _activateProfile(profile, command) {
+      if (profile === this._activeProfile) {
+        console.log(
+          `Profile ${profile} is already active. Skipping activation.`
+        );
+        return;
+      }
+
       if (
         (profile === "Vfio" && this._activeProfile === "Hybrid") ||
         (profile === "Hybrid" && this._activeProfile === "Vfio")
@@ -174,44 +199,34 @@ const GpuProfilesToggle = GObject.registerClass(
         );
         Main.notify(
           "GPU Switcher",
-          "Direct switching between Vfio and Hybrid profiles is not supported."
+          "Direct switching between Vfio and Hybrid profiles is not supported. Please switch to Integrated first."
         );
         return;
       }
 
-      try {
-        let proc = Gio.Subprocess.new(
-          ["sh", "-c", command],
-          Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_PIPE
-        );
-
-        proc.communicate_utf8_async(null, null, (proc, res) => {
-          try {
-            let [ok, stdout, stderr] = proc.communicate_utf8_finish(res);
-            if (proc.get_successful()) {
-              console.log(`Profile ${profile} activated successfully`);
-              const previousProfile = this._activeProfile;
-              this._setActiveProfile(profile);
-              if (
-                (previousProfile === "Integrated" && profile === "Hybrid") ||
-                (previousProfile === "Hybrid" && profile === "Integrated")
-              ) {
-                Util.spawnCommandLine("gnome-session-quit --logout");
-              }
-            } else {
-              console.error(
-                `Failed to activate profile ${profile}: ${stderr.trim()}`
-              );
-            }
-          } catch (e) {
-            console.error(
-              `Error while activating profile ${profile}: ${e.message}`
-            );
+      this._executeCommandWithRetry(
+        ["sh", "-c", command],
+        () => {
+          console.log(`Profile ${profile} activated successfully`);
+          const previousProfile = this._activeProfile;
+          this._setActiveProfile(profile);
+          if (
+            (previousProfile === "Integrated" && profile === "Hybrid") ||
+            (previousProfile === "Hybrid" && profile === "Integrated")
+          ) {
+            Util.spawnCommandLine("gnome-session-quit --logout");
           }
-        });
-      } catch (e) {
-        console.error(`Failed to execute command: ${e.message}`);
-      }
+        },
+        () => {
+          console.error(
+            `Failed to activate profile ${profile} after multiple attempts`
+          );
+          Main.notify(
+            "GPU Switcher",
+            `Failed to switch to ${profile} profile. Please try again or check system logs.`
+          );
+        }
+      );
     }
 
     _setActiveProfile(profile) {
