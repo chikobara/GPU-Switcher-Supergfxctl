@@ -13,27 +13,27 @@ import { Extension } from "resource:///org/gnome/shell/extensions/extension.js";
 const GPU_PROFILE_PARAMS = {
   Integrated: {
     name: "Integrated",
-    iconName: "video-display-symbolic",
+    iconName: "computer-symbolic",
     command: "supergfxctl -m Integrated",
   },
   Hybrid: {
     name: "Hybrid",
-    iconName: "video-joined-displays-symbolic",
+    iconName: "drive-harddisk-solidstate-symbolic",
     command: "supergfxctl -m Hybrid",
   },
   Vfio: {
     name: "Vfio",
-    iconName: "computer-symbolic",
+    iconName: "applications-engineering-symbolic",
     command: "supergfxctl -m Vfio",
   },
   AsusEgpu: {
     name: "AsusEgpu",
-    iconName: "display-symbolic",
+    iconName: "display-projector-symbolic",
     command: "supergfxctl -m AsusEgpu",
   },
   AsusMuxDgpu: {
     name: "AsusMuxDgpu",
-    iconName: "video-display-symbolic",
+    iconName: "drive-multidisk-symbolic",
     command: "supergfxctl -m AsusMuxDgpu",
   },
 };
