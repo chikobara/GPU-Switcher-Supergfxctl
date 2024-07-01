@@ -281,6 +281,11 @@ const GpuProfilesToggle = GObject.registerClass(
 
       this.checked = this._activeProfile !== "Hybrid";
     }
+
+    destroy() {
+      this._clearRetryTimeout();
+      super.destroy();
+    }
   }
 );
 
@@ -346,11 +351,7 @@ export default class GpuSwitcherExtension extends Extension {
   disable() {
     if (this._indicator) {
       this._indicator.quickSettingsItems.forEach((item) => {
-        if (item instanceof GpuProfilesToggle) {
-          item._clearRetryTimeout();
-        }
         item.destroy();
-        console.log("disabled");
       });
       // Remove the indicator from its parent
       const parent = this._indicator.get_parent();
