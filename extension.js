@@ -1,3 +1,4 @@
+import GLib from "gi://GLib";
 import Gio from "gi://Gio";
 import St from "gi://St";
 import GObject from "gi://GObject";
@@ -75,7 +76,30 @@ const GpuProfilesToggle = GObject.registerClass(
       this.menu.setHeader(this.headerIcon, "GPU Mode");
       this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
+      // Fetch supported and current profiles
       this._fetchSupportedProfiles();
+
+      // Subscribe to DBus signal for GPU mode changes
+      this._subscribeToDBus();
+    }
+
+    _subscribeToDBus() {
+      this._dbusConnection = Gio.DBus.system; // Use the system bus
+      this._signalId = this._dbusConnection.signal_subscribe(
+        "org.supergfxctl.Daemon",      // Sender (service) name
+        "org.supergfxctl.Daemon",      // Interface name
+        "NotifyGfx",                   // Signal name
+        "/org/supergfxctl/Gfx",        // Object path
+        null,                          // No argument filter
+        Gio.DBusSignalFlags.NONE,
+        (connection, senderName, objectPath, interfaceName, signalName, parameters) => {
+          // The signal carries the new mode as a number.
+          // Log the numeric value and then refresh the current profile.
+          let newMode = parameters.deep_unpack()[0];
+          log(`NotifyGfx signal received, new mode index: ${newMode}`);
+          this._fetchCurrentProfile();
+        }
+      );
     }
 
     _fetchSupportedProfiles() {
@@ -90,6 +114,7 @@ const GpuProfilesToggle = GObject.registerClass(
           console.error(
             "Failed to fetch supported profiles after multiple attempts"
           );
+          // Fallback: use all defined profiles.
           this._addProfileToggles(Object.keys(GPU_PROFILE_PARAMS));
           this._fetchCurrentProfile();
         }
@@ -98,6 +123,7 @@ const GpuProfilesToggle = GObject.registerClass(
 
     _parseSupportedProfiles(output) {
       try {
+        // Remove brackets/spaces and split on comma
         return output.replace(/[\[\]\s]/g, "").split(",");
       } catch (e) {
         console.error(`Error parsing supported profiles: ${e.message}`);
@@ -109,18 +135,20 @@ const GpuProfilesToggle = GObject.registerClass(
       this._executeCommandWithRetry(
         ["supergfxctl", "-g"],
         (stdout) => {
-          if (stdout.trim() in GPU_PROFILE_PARAMS) {
-            this._setActiveProfile(stdout.trim());
+          let profile = stdout.trim();
+          if (profile in GPU_PROFILE_PARAMS) {
+            this._setActiveProfile(profile);
           } else {
-            console.error(`Unknown profile returned: ${stdout.trim()}`);
-            this._setActiveProfile("Hybrid"); // Fallback to default
+            console.error(`Unknown profile returned: ${profile}`);
+            // Fallback to a default profile
+            this._setActiveProfile("Hybrid");
           }
         },
         () => {
           console.error(
             "Failed to fetch current profile after multiple attempts"
           );
-          this._setActiveProfile("Hybrid"); // Fallback to default
+          this._setActiveProfile("Hybrid");
         }
       );
     }
@@ -138,7 +166,7 @@ const GpuProfilesToggle = GObject.registerClass(
             if (ok) {
               onSuccess(stdout);
             } else if (retryCount < MAX_RETRIES) {
-              console.warn(`Command failed, retrying in ${RETRY_DELAY}ms...`);
+              log(`Command failed, retrying in ${RETRY_DELAY}ms...`);
               this._retryTimeoutId = GLib.timeout_add(
                 GLib.PRIORITY_DEFAULT,
                 RETRY_DELAY,
@@ -154,9 +182,7 @@ const GpuProfilesToggle = GObject.registerClass(
                 }
               );
             } else {
-              console.error(
-                `Command failed after ${MAX_RETRIES} attempts: ${stderr}`
-              );
+              console.error(`Command failed after ${MAX_RETRIES} attempts: ${stderr}`);
               onFailure();
             }
           } catch (e) {
@@ -186,7 +212,7 @@ const GpuProfilesToggle = GObject.registerClass(
             params.iconName
           );
           item.connect("activate", () => {
-            console.log(`Activating profile: ${profile}`);
+            log(`Activating profile: ${profile}`);
             this._activateProfile(profile, params.command);
           });
           this._profileItems.set(profile, item);
@@ -197,9 +223,7 @@ const GpuProfilesToggle = GObject.registerClass(
 
     _activateProfile(profile, command) {
       if (profile === this._activeProfile) {
-        console.log(
-          `Profile ${profile} is already active. Skipping activation.`
-        );
+        log(`Profile ${profile} is already active. Skipping activation.`);
         return;
       }
 
@@ -220,7 +244,7 @@ const GpuProfilesToggle = GObject.registerClass(
       this._executeCommandWithRetry(
         ["sh", "-c", command],
         () => {
-          console.log(`Profile ${profile} activated successfully`);
+          log(`Profile ${profile} activated successfully`);
           const previousProfile = this._activeProfile;
           this._setActiveProfile(profile);
           if (
@@ -231,9 +255,7 @@ const GpuProfilesToggle = GObject.registerClass(
           }
         },
         () => {
-          console.error(
-            `Failed to activate profile ${profile} after multiple attempts`
-          );
+          console.error(`Failed to activate profile ${profile} after multiple attempts`);
           Main.notify(
             "GPU Switcher",
             `Failed to switch to ${profile} profile. Please try again or check system logs.`
@@ -244,7 +266,7 @@ const GpuProfilesToggle = GObject.registerClass(
 
     _setActiveProfile(profile) {
       if (GPU_PROFILE_PARAMS[profile]) {
-        console.log(`Setting active profile: ${profile}`);
+        log(`Setting active profile: ${profile}`);
         this._activeProfile = profile;
         this.notify("active-profile");
         this._sync();
@@ -258,10 +280,9 @@ const GpuProfilesToggle = GObject.registerClass(
     }
 
     _sync() {
-      console.log(`Synchronizing profile: ${this._activeProfile}`);
+      log(`Synchronizing profile: ${this._activeProfile}`);
 
       const params = GPU_PROFILE_PARAMS[this._activeProfile];
-
       if (!params) {
         console.error(
           `Active profile ${this._activeProfile} is not defined in GPU_PROFILE_PARAMS.`
@@ -278,11 +299,14 @@ const GpuProfilesToggle = GObject.registerClass(
       }
 
       this.set({ subtitle: params.name, iconName: params.iconName });
-
       this.checked = this._activeProfile !== "Hybrid";
     }
 
     destroy() {
+      if (this._signalId) {
+        this._dbusConnection.signal_unsubscribe(this._signalId);
+        this._signalId = null;
+      }
       this._clearRetryTimeout();
       super.destroy();
     }
@@ -298,7 +322,7 @@ export const Indicator = GObject.registerClass(
       this._indicator.icon_name = "video-display-symbolic"; // Default icon
       this.indicatorIndex = 0;
 
-      //create the quick settings toggle
+      // Create the quick settings toggle
       this._toggle = new GpuProfilesToggle(path);
       this.quickSettingsItems.push(this._toggle);
 
@@ -307,7 +331,7 @@ export const Indicator = GObject.registerClass(
         this._updateIcon.bind(this)
       );
 
-      // Try to insert the indicator at a specific index
+      // Insert the indicator into quick settings
       this._insertIndicator();
       this._updateIcon();
     }
@@ -332,12 +356,9 @@ export const Indicator = GObject.registerClass(
         this._indicator.visible = true;
       } else {
         this._indicator.icon_name = "video-display-symbolic"; // Default icon
-        this._indicator.visible = true; // Always keep it visible, change this if you want it to hide
+        this._indicator.visible = true;
       }
-      // Log for debugging
-      console.log(
-        `Updated icon: ${this._indicator.icon_name}, Visible: ${this._indicator.visible}`
-      );
+      log(`Updated icon: ${this._indicator.icon_name}, Visible: ${this._indicator.visible}`);
     }
   }
 );
@@ -353,7 +374,6 @@ export default class GpuSwitcherExtension extends Extension {
       this._indicator.quickSettingsItems.forEach((item) => {
         item.destroy();
       });
-      // Remove the indicator from its parent
       const parent = this._indicator.get_parent();
       if (parent) {
         parent.remove_child(this._indicator);
