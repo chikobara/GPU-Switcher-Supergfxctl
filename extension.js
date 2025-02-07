@@ -96,7 +96,7 @@ const GpuProfilesToggle = GObject.registerClass(
           // The signal carries the new mode as a number.
           // Log the numeric value and then refresh the current profile.
           let newMode = parameters.deep_unpack()[0];
-          log(`NotifyGfx signal received, new mode index: ${newMode}`);
+          console.log(`NotifyGfx signal received, new mode index: ${newMode}`);
           this._fetchCurrentProfile();
         }
       );
@@ -166,7 +166,7 @@ const GpuProfilesToggle = GObject.registerClass(
             if (ok) {
               onSuccess(stdout);
             } else if (retryCount < MAX_RETRIES) {
-              log(`Command failed, retrying in ${RETRY_DELAY}ms...`);
+              console.log(`Command failed, retrying in ${RETRY_DELAY}ms...`);
               this._retryTimeoutId = GLib.timeout_add(
                 GLib.PRIORITY_DEFAULT,
                 RETRY_DELAY,
@@ -212,7 +212,7 @@ const GpuProfilesToggle = GObject.registerClass(
             params.iconName
           );
           item.connect("activate", () => {
-            log(`Activating profile: ${profile}`);
+            console.log(`Activating profile: ${profile}`);
             this._activateProfile(profile, params.command);
           });
           this._profileItems.set(profile, item);
@@ -223,7 +223,7 @@ const GpuProfilesToggle = GObject.registerClass(
 
     _activateProfile(profile, command) {
       if (profile === this._activeProfile) {
-        log(`Profile ${profile} is already active. Skipping activation.`);
+        console.log(`Profile ${profile} is already active. Skipping activation.`);
         return;
       }
 
@@ -244,7 +244,7 @@ const GpuProfilesToggle = GObject.registerClass(
       this._executeCommandWithRetry(
         ["sh", "-c", command],
         () => {
-          log(`Profile ${profile} activated successfully`);
+          console.log(`Profile ${profile} activated successfully`);
           const previousProfile = this._activeProfile;
           this._setActiveProfile(profile);
           if (
@@ -266,7 +266,7 @@ const GpuProfilesToggle = GObject.registerClass(
 
     _setActiveProfile(profile) {
       if (GPU_PROFILE_PARAMS[profile]) {
-        log(`Setting active profile: ${profile}`);
+        console.log(`Setting active profile: ${profile}`);
         this._activeProfile = profile;
         this.notify("active-profile");
         this._sync();
@@ -280,7 +280,7 @@ const GpuProfilesToggle = GObject.registerClass(
     }
 
     _sync() {
-      log(`Synchronizing profile: ${this._activeProfile}`);
+      console.log(`Synchronizing profile: ${this._activeProfile}`);
 
       const params = GPU_PROFILE_PARAMS[this._activeProfile];
       if (!params) {
@@ -358,7 +358,7 @@ export const Indicator = GObject.registerClass(
         this._indicator.icon_name = "video-display-symbolic"; // Default icon
         this._indicator.visible = true;
       }
-      log(`Updated icon: ${this._indicator.icon_name}, Visible: ${this._indicator.visible}`);
+      console.log(`Updated icon: ${this._indicator.icon_name}, Visible: ${this._indicator.visible}`);
     }
   }
 );
