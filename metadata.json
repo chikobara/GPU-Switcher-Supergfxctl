@@ -3,6 +3,7 @@
   "name": "GPU Supergfxctl Switch",
   "description": "Simple GPU Profile switcher Gnome-Shell-Extension for ASUS laptops using Supergfxctl",
   "shell-version": [
+    "48",
     "47",
     "46"
   ],
