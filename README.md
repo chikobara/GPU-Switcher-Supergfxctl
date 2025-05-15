@@ -9,7 +9,7 @@ asusctl v6.0
 it supports all modes :
 Integrated, Hybrid, VFIO, AsusEgpu, AsusMuxDgpu
 
-![screenshot example](./img/scr.png)
+![screenshot example](./img/src.png)
 
 ## Use this only if you
 
