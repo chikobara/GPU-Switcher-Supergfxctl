@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.gpu-switcher-supergfxctl" path="/org/gnome/shell/extensions/gpu-switcher-supergfxctl/">
+    <key name="show-panel-icon" type="b">
+      <default>true</default>
+      <summary>Show panel icon</summary>
+      <description>Whether to show the GPU mode icon in the GNOME top bar.</description>
+    </key>
+  </schema>
+</schemalist>

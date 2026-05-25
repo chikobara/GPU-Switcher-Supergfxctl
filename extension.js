@@ -41,6 +41,7 @@ const GPU_PROFILE_PARAMS = {
 
 const RETRY_DELAY = 1000;
 const MAX_RETRIES = 3;
+const SHOW_PANEL_ICON_KEY = "show-panel-icon";
 
 const GpuProfilesToggle = GObject.registerClass(
   {
@@ -55,12 +56,14 @@ const GpuProfilesToggle = GObject.registerClass(
     },
   },
   class GpuProfilesToggle extends QuickMenuToggle {
-    _init(path) {
+    _init(path, settings) {
       super._init({ title: "GPU Mode" });
 
       this._profileItems = new Map();
       this._activeProfile = null;
       this._retryTimeoutId = null;
+      this._settings = settings;
+      this._settingsChangedId = null;
       this.connect("clicked", () => {
         this._sync();
       });
@@ -75,6 +78,22 @@ const GpuProfilesToggle = GObject.registerClass(
       this.menu.addMenuItem(this._profileSection);
       this.menu.setHeader(this.headerIcon, "GPU Mode");
       this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+      this._showPanelIconItem = new PopupMenu.PopupSwitchMenuItem(
+        "Show Panel Icon",
+        this._settings.get_boolean(SHOW_PANEL_ICON_KEY)
+      );
+      this._showPanelIconItem.connect("toggled", (_item, state) => {
+        this._settings.set_boolean(SHOW_PANEL_ICON_KEY, state);
+      });
+      this.menu.addMenuItem(this._showPanelIconItem);
+      this._settingsChangedId = this._settings.connect(
+        `changed::${SHOW_PANEL_ICON_KEY}`,
+        () => {
+          this._showPanelIconItem.setToggleState(
+            this._settings.get_boolean(SHOW_PANEL_ICON_KEY)
+          );
+        }
+      );
 
       // Fetch supported and current profiles
       this._fetchSupportedProfiles();
@@ -308,6 +327,10 @@ const GpuProfilesToggle = GObject.registerClass(
         this._signalId = null;
       }
       this._clearRetryTimeout();
+      if (this._settingsChangedId) {
+        this._settings.disconnect(this._settingsChangedId);
+        this._settingsChangedId = null;
+      }
       super.destroy();
     }
   }
@@ -315,15 +338,20 @@ const GpuProfilesToggle = GObject.registerClass(
 
 export const Indicator = GObject.registerClass(
   class Indicator extends SystemIndicator {
-    _init(path) {
+    _init(path, settings) {
       super._init();
 
+      this._settings = settings;
+      this._settingsChangedId = this._settings.connect(
+        `changed::${SHOW_PANEL_ICON_KEY}`,
+        this._updateIcon.bind(this)
+      );
       this._indicator = this._addIndicator();
       this._indicator.icon_name = "video-display-symbolic"; // Default icon
       this.indicatorIndex = 0;
 
       // Create the quick settings toggle
-      this._toggle = new GpuProfilesToggle(path);
+      this._toggle = new GpuProfilesToggle(path, settings);
       this.quickSettingsItems.push(this._toggle);
 
       this._toggle.connect(
@@ -349,23 +377,33 @@ export const Indicator = GObject.registerClass(
     }
 
     _updateIcon() {
+      const showPanelIcon = this._settings.get_boolean(SHOW_PANEL_ICON_KEY);
       const activeProfile = this._toggle.activeProfile;
       if (activeProfile && GPU_PROFILE_PARAMS[activeProfile]) {
         const params = GPU_PROFILE_PARAMS[activeProfile];
         this._indicator.icon_name = params.iconName;
-        this._indicator.visible = true;
+        this._indicator.visible = showPanelIcon;
       } else {
         this._indicator.icon_name = "video-display-symbolic"; // Default icon
-        this._indicator.visible = true;
+        this._indicator.visible = showPanelIcon;
       }
       console.log(`Updated icon: ${this._indicator.icon_name}, Visible: ${this._indicator.visible}`);
+    }
+
+    destroy() {
+      if (this._settingsChangedId) {
+        this._settings.disconnect(this._settingsChangedId);
+        this._settingsChangedId = null;
+      }
+      super.destroy();
     }
   }
 );
 
 export default class GpuSwitcherExtension extends Extension {
   enable() {
-    this._indicator = new Indicator(this.path);
+    this._settings = this.getSettings();
+    this._indicator = new Indicator(this.path, this._settings);
     Main.panel.statusArea.quickSettings.addExternalIndicator(this._indicator);
   }
 
@@ -381,5 +419,6 @@ export default class GpuSwitcherExtension extends Extension {
       this._indicator.destroy();
       this._indicator = null;
     }
+    this._settings = null;
   }
 }
