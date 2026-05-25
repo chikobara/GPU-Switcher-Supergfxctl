@@ -6,7 +6,7 @@ const SHOW_PANEL_ICON_KEY = "show-panel-icon";
 
 export default class GpuSwitcherPreferences extends ExtensionPreferences {
   fillPreferencesWindow(window) {
-    const settings = this.getSettings();
+    window._settings = this.getSettings();
 
     const page = new Adw.PreferencesPage({
       title: "GPU Switcher",
@@ -22,7 +22,7 @@ export default class GpuSwitcherPreferences extends ExtensionPreferences {
       subtitle: "Show the current GPU mode icon in the GNOME top bar.",
     });
 
-    settings.bind(
+    window._settings.bind(
       SHOW_PANEL_ICON_KEY,
       showPanelIconRow,
       "active",
