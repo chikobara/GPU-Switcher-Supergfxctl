@@ -1,3 +1,5 @@
+
+
 # GPU-Supergfxctl-Switch
 
 GPU Profile switcher Gnome-Shell-Extension for ASUS laptops using Supergfxctl
@@ -36,5 +38,5 @@ Integrated, Hybrid, VFIO, AsusEgpu, AsusMuxDgpu
 - clone this repo
 
     ```bash
-    cp -rf GPU-Switcher-Supergfxctl ~/.local/share/gnome-shell/extensions/gpu-switcher-supergfxctl@chikobara.github.io
+    cp -r GPU-Switcher-Supergfxctl ~/.local/share/gnome-shell/extensions/gpu-switcher-supergfxctl@chikobara.github.io
     ```
