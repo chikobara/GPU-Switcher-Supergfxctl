@@ -7,31 +7,41 @@ import {
 } from "resource:///org/gnome/shell/ui/quickSettings.js";
 import * as Main from "resource:///org/gnome/shell/ui/main.js";
 import * as PopupMenu from "resource:///org/gnome/shell/ui/popupMenu.js";
-import { Extension } from "resource:///org/gnome/shell/extensions/extension.js";
+import {
+  Extension,
+  gettext as _,
+} from "resource:///org/gnome/shell/extensions/extension.js";
+
+// Marks strings for extraction without translating them yet: the profile
+// table is built at module scope, where gettext() is not available because
+// the extension instance does not exist until the module has finished
+// evaluating. The actual translation happens in `_(params.name)` at render
+// time.
+const N_ = s => s;
 
 const GPU_PROFILE_PARAMS = {
   Integrated: {
-    name: "Integrated",
+    name: N_("Integrated"),
     iconName: "video-single-display-symbolic",
     command: ["supergfxctl", "-m", "Integrated"],
   },
   Hybrid: {
-    name: "Hybrid",
+    name: N_("Hybrid"),
     iconName: "video-joined-displays-symbolic",
     command: ["supergfxctl", "-m", "Hybrid"],
   },
   Vfio: {
-    name: "Vfio",
+    name: N_("Vfio"),
     iconName: "applications-engineering-symbolic",
     command: ["supergfxctl", "-m", "Vfio"],
   },
   AsusEgpu: {
-    name: "AsusEgpu",
+    name: N_("AsusEgpu"),
     iconName: "display-projector-symbolic",
     command: ["supergfxctl", "-m", "AsusEgpu"],
   },
   AsusMuxDgpu: {
-    name: "AsusMuxDgpu",
+    name: N_("AsusMuxDgpu"),
     iconName: "drive-multidisk-symbolic",
     command: ["supergfxctl", "-m", "AsusMuxDgpu"],
   },
@@ -55,7 +65,7 @@ const GpuProfilesToggle = GObject.registerClass(
   },
   class GpuProfilesToggle extends QuickMenuToggle {
     _init(path, settings) {
-      super._init({ title: "GPU Mode" });
+      super._init({ title: _("GPU Mode") });
 
       this._profileItems = new Map();
       this._activeProfile = null;
@@ -75,10 +85,10 @@ const GpuProfilesToggle = GObject.registerClass(
       );
       this._profileSection = new PopupMenu.PopupMenuSection();
       this.menu.addMenuItem(this._profileSection);
-      this.menu.setHeader(this.headerIcon, "GPU Mode");
+      this.menu.setHeader(this.headerIcon, _("GPU Mode"));
       this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
       this._showPanelIconItem = new PopupMenu.PopupSwitchMenuItem(
-        "Show Panel Icon",
+        _("Show Panel Icon"),
         this._settings.get_boolean(SHOW_PANEL_ICON_KEY)
       );
       this._showPanelIconItemToggledId = this._showPanelIconItem.connect(
@@ -213,7 +223,7 @@ const GpuProfilesToggle = GObject.registerClass(
         if (GPU_PROFILE_PARAMS[profile]) {
           const params = GPU_PROFILE_PARAMS[profile];
           const item = new PopupMenu.PopupImageMenuItem(
-            params.name,
+            _(params.name),
             params.iconName
           );
           item.connect("activate", () => {
@@ -235,8 +245,10 @@ const GpuProfilesToggle = GObject.registerClass(
         (profile === "Hybrid" && this._activeProfile === "Vfio")
       ) {
         Main.notify(
-          "GPU Switcher",
-          "Direct switching between Vfio and Hybrid profiles is not supported. Please switch to Integrated first."
+          _("GPU Switcher"),
+          _(
+            "Direct switching between Vfio and Hybrid profiles is not supported. Please switch to Integrated first."
+          )
         );
         return;
       }
@@ -258,8 +270,10 @@ const GpuProfilesToggle = GObject.registerClass(
         },
         () => {
           Main.notify(
-            "GPU Switcher",
-            `Failed to switch to ${profile} profile. Please try again or check system logs.`
+            _("GPU Switcher"),
+            _(
+              "Failed to switch to %s profile. Please try again or check system logs."
+            ).format(profile)
           );
         }
       );
@@ -291,7 +305,7 @@ const GpuProfilesToggle = GObject.registerClass(
         );
       }
 
-      this.set({ subtitle: params.name, iconName: params.iconName });
+      this.set({ subtitle: _(params.name), iconName: params.iconName });
       this.checked = this._activeProfile !== "Hybrid";
     }
 

@@ -11,5 +11,6 @@
   ],
   "url": "https://github.com/chikobara/GPU-Switcher-Supergfxctl",
   "uuid": "gpu-switcher-supergfxctl@chikobara.github.io",
-  "settings-schema": "org.gnome.shell.extensions.gpu-switcher-supergfxctl"
+  "settings-schema": "org.gnome.shell.extensions.gpu-switcher-supergfxctl",
+  "gettext-domain": "gpu-switcher-supergfxctl@chikobara.github.io"
 }
