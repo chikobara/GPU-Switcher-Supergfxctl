@@ -1,0 +1,68 @@
+# Japanese translation for GPU Supergfxctl Switch.
+# This file is distributed under the same license as the GPU Supergfxctl Switch package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: GPU Supergfxctl Switch\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-13 12:15+0100\n"
+"PO-Revision-Date: 2026-11-13 21:05+0300\n"
+"Last-Translator: \n"
+"Language-Team: Japanese\n"
+"Language: ja\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: extension.js
+msgid "Integrated"
+msgstr "内蔵"
+
+#: extension.js
+msgid "Hybrid"
+msgstr "ハイブリッド"
+
+#: extension.js
+msgid "Vfio"
+msgstr "Vfio"
+
+#: extension.js
+msgid "AsusEgpu"
+msgstr "AsusEgpu"
+
+#: extension.js
+msgid "AsusMuxDgpu"
+msgstr "AsusMuxDgpu"
+
+#: extension.js
+msgid "GPU Mode"
+msgstr "GPUモード"
+
+#: extension.js prefs.js
+msgid "Show Panel Icon"
+msgstr "トップバーにアイコンを表示"
+
+#: extension.js prefs.js
+msgid "GPU Switcher"
+msgstr "GPUスイッチャー"
+
+#: extension.js
+msgid ""
+"Direct switching between Vfio and Hybrid profiles is not supported. Please "
+"switch to Integrated first."
+msgstr ""
+"Vfio とハイブリッドのプロファイルは直接切り替えられません。先に内蔵プロファイルに切り替えてください。"
+
+#: extension.js
+#, javascript-format
+msgid "Failed to switch to %s profile. Please try again or check system logs."
+msgstr "プロファイル %s への切り替えに失敗しました。もう一度お試しいただくか、システムログを確認してください。"
+
+#: prefs.js
+msgid "Panel"
+msgstr "パネル"
+
+#: prefs.js
+msgid "Show the current GPU mode icon in the GNOME top bar."
+msgstr "GNOME のトップバーに現在の GPU モードアイコンを表示します。"

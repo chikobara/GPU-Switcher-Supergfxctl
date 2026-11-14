@@ -181,8 +181,8 @@ const GpuProfilesToggle = GObject.registerClass(
 
         proc.communicate_utf8_async(null, null, (proc, res) => {
           try {
-            let [ok, stdout, stderr] = proc.communicate_utf8_finish(res);
-            if (ok) {
+            const [communicated, stdout] = proc.communicate_utf8_finish(res);
+            if (communicated && proc.get_successful()) {
               onSuccess(stdout);
             } else if (retryCount < MAX_RETRIES) {
               this._retryTimeoutId = GLib.timeout_add(
@@ -353,7 +353,6 @@ export const Indicator = GObject.registerClass(
       );
       this._indicator = this._addIndicator();
       this._indicator.icon_name = "video-display-symbolic"; // Default icon
-      this.indicatorIndex = 0;
 
       // Create the quick settings toggle
       this._toggle = new GpuProfilesToggle(path, settings);
@@ -364,19 +363,7 @@ export const Indicator = GObject.registerClass(
         this._updateIcon.bind(this)
       );
 
-      // Insert the indicator into quick settings
-      this._insertIndicator();
       this._updateIcon();
-    }
-
-    _insertIndicator() {
-      const QuickSettingsMenu = Main.panel.statusArea.quickSettings;
-      if (QuickSettingsMenu && QuickSettingsMenu._indicators) {
-        QuickSettingsMenu._indicators.insert_child_at_index(
-          this,
-          this.indicatorIndex
-        );
-      }
     }
 
     _updateIcon() {
