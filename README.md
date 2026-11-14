@@ -34,7 +34,7 @@ Install and configure these dependencies for your distribution before enabling t
 
 Install [GPU Supergfxctl Switch](https://extensions.gnome.org/extension/7018/gpu-supergfxctl-switch/) from GNOME Extensions.
 
-[![Get it on GNOME Extensions](https://raw.githubusercontent.com/andyholmes/gnome-shell-extensions-badge/master/get-it-on-ego.svg?sanitize=true)](https://extensions.gnome.org/extension/7018/gpu-supergfxctl-switch/)
+ [<img alt="EGO page" height="70" src="https://raw.githubusercontent.com/andyholmes/gnome-shell-extensions-badge/master/get-it-on-ego.svg?sanitize=true">](https://extensions.gnome.org/extension/7018/gpu-supergfxctl-switch/)
 
 ### Manual installation
 
