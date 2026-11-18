@@ -9,7 +9,7 @@ A GNOME Shell Quick Settings extension for switching GPU profiles managed by [su
 - GNOME Shell 46–51 (as declared in `metadata.json`)
 - Published on [GNOME Extensions](https://extensions.gnome.org/extension/7018/gpu-supergfxctl-switch/)
 - Tested on Arch with GNOME Shell 51.1 on Wayland; previously tested with GNOME 46 on X11 and Wayland
-- Translations: Catalan, Arabic, and Japanese
+- Translations: Catalan, Arabic, Japanese, and Spanish
 
 The available profiles depend on the hardware and `supergfxctl` configuration:
 

@@ -1,0 +1,72 @@
+# Spanish translation for GPU Supergfxctl Switch.
+# This file is distributed under the same license as the GPU Supergfxctl Switch package.
+# Pedro Flores, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: GPU Supergfxctl Switch\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-13 12:15+0100\n"
+"PO-Revision-Date: 2026-11-18 14:48+0100\n"
+"Last-Translator: Pedro Flores\n"
+"Language-Team: Spanish\n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: extension.js
+msgid "Integrated"
+msgstr "Integrado"
+
+#: extension.js
+msgid "Hybrid"
+msgstr "Híbrido"
+
+#: extension.js
+msgid "Vfio"
+msgstr "Vfio"
+
+#: extension.js
+msgid "AsusEgpu"
+msgstr "AsusEgpu"
+
+#: extension.js
+msgid "AsusMuxDgpu"
+msgstr "AsusMuxDgpu"
+
+#: extension.js
+msgid "GPU Mode"
+msgstr "Modo de GPU"
+
+#: extension.js prefs.js
+msgid "Show Panel Icon"
+msgstr "Mostrar icono en el panel"
+
+#: extension.js prefs.js
+msgid "GPU Switcher"
+msgstr "Selector de GPU"
+
+#: extension.js
+msgid ""
+"Direct switching between Vfio and Hybrid profiles is not supported. Please "
+"switch to Integrated first."
+msgstr ""
+"No se puede cambiar directamente entre los perfiles Vfio e Híbrido. Cambia "
+"primero a Integrado."
+
+#: extension.js
+#, javascript-format
+msgid "Failed to switch to %s profile. Please try again or check system logs."
+msgstr ""
+"No se ha podido cambiar al perfil %s. Vuelve a intentarlo o consulta los "
+"registros del sistema."
+
+#: prefs.js
+msgid "Panel"
+msgstr "Panel"
+
+#: prefs.js
+msgid "Show the current GPU mode icon in the GNOME top bar."
+msgstr "Muestra el icono del modo de GPU actual en la barra superior de GNOME."
